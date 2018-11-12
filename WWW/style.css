@@ -1,0 +1,16 @@
+#list {
+
+}
+
+#list li {
+    padding: 10px;
+    font-size: 40px;
+}
+
+#list li:hover {
+    background-color: grey;
+}
+
+#error {
+    color: red;
+}

@@ -1,0 +1,35 @@
+.flex {
+    display: flex;
+}
+
+.flex > * {
+    margin-left: 10px;
+}
+
+.gone {
+    display: none;
+}
+
+.folder, .file {
+    margin-left: 20px;
+    margin-top: 20px;
+    cursor: pointer;
+}
+
+.folder {
+    color: red;
+}
+
+.file-icon {
+    background: url("../../../img/2x/baseline_description_black_24dp.png");
+    height: 10px;
+    transform: translate(0, -5px);
+}
+
+.file {
+    color: pink;
+}
+
+/* .folder:before {
+    
+} */
