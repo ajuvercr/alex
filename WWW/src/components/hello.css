@@ -8,3 +8,11 @@
 .s {
     font-weight: 100;
 }
+
+.Widget {
+    background-color: #f0dfc5;
+    width: 50%;
+    height: 500px;
+    padding: 5px;
+    color: #583b39;
+}

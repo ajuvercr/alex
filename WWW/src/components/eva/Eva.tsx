@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as $ from "jquery";
-import {InputField} from "./util/util";
+import {InputField} from "../util/util";
 
 interface IDairyProps {
     baseUrl: string

@@ -149,7 +149,7 @@ export class Main extends React.Component<IMainProps, IMainState> {
     }
 
     render () {
-        const goTo = <InputField name="New folder: " buttonName="Make!" action={(s) => this.newFolder(s)}/>;
+        const goTo = <InputField buttonName="Make!" action={(s) => this.newFolder(s)}/>;
         const listItems = this.state.listItems.sort((l1, l2) => {
             if (l1.fileType == l2.fileType) {
                 return l1.name > l2.name ? 1 : -1;
@@ -159,15 +159,22 @@ export class Main extends React.Component<IMainProps, IMainState> {
         });
         const items = listItems.map((i) => listItem(i, (i) => this.act(i)));
         return (
-            <div>
-                <button onClick={(e) => this.openFileChooser()}>Upload File</button>
-                <input id="file_chooser" type="file" className="gone" onChange={e => this.uploadFiles(e.target.files)} multiple/>
-                <div className="flex">
-                    <p>State: /{this.state.path.join("/")}</p>
-                    <button onClick={(e) => this.goBack()} >Go back!</button>
+            <div className="FileExchanger Widget">
+                <h1>File Exchanger</h1>
+                <div className="Path">
+                    <button onClick={(e) => this.goBack()} >Back</button>
+                    <div>
+                        <p>State: /{this.state.path.join("/")}</p>
+                        {goTo}
+                    </div>
                 </div>
-                {goTo}
-                {items}
+                <div className="FileChooser">
+                    {items}
+                    <div onClick={(e) => this.openFileChooser()}>
+                        <span>+</span>
+                    </div>
+                </div>
+                <input id="file_chooser" type="file" className="gone" onChange={e => this.uploadFiles(e.target.files)} multiple/>
             </div>
         );
     }
