@@ -1,11 +1,8 @@
 
 use std::path::{PathBuf, Path};
-use std::io::Result as R;
 use std::sync::Mutex;
-use std::error::Error;
 use std::collections::HashMap;
 
-use futures::future::LocalFutureObj;
 use chrono::Duration;
 use chrono::offset::Utc;
 use chrono::prelude::*;

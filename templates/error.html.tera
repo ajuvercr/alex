@@ -1,0 +1,8 @@
+{% extends "base" %}
+
+{% block content %}
+
+{% block page %}
+{%endblock page %}
+
+{% endblock content %}

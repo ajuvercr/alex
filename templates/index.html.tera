@@ -1,0 +1,42 @@
+{% extends "base" %}
+
+{% block content %}
+<p>
+    <iframe width="0" height="0" style="display: None;" name="dummyframe" id="dummyframe"></iframe>
+
+    <div class="w3-row-padding">
+        <div class="w3-padding-large w3-half">
+            <div class="w3-container w3-mobile w3-card w3-text-blue">
+                <h1> Log In </h1>
+
+                <form action="/login" method="post" targer="#dummyframe">
+                    <p>
+                    <label>Username</label>
+                    <input type="text" name="username" class="w3-input w3-border"></p>
+                    <p>
+                    <label>Password</label>
+                    <input type="text" name="password" class="w3-input w3-border"></p>
+                    <p>
+                    <input type="submit" value="Submit" class="w3-btn w3-blue"></p>
+                </form>
+            </div>
+        </div>
+
+        <div class="w3-padding-large w3-half">
+            <div class="w3-container w3-mobile w3-card w3-text-green">
+                <h1> Sign Up </h1>
+
+                <form action="/signup" method="post" targer="#dummyframe">
+                    <p><label>Username</label>
+                    <input type="text" name="username" class="w3-border w3-input"></p>
+                    <p>
+                    <label>Password</label>
+                    <input type="text" name="password" class="w3-border w3-input"></p>
+                    <p>
+                    <input type="submit" value="Submit" class="w3-btn w3-green"></p>
+                </form>
+            </div>
+        </div>
+    </div>
+</p>
+{% endblock content %}

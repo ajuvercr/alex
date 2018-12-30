@@ -1,0 +1,71 @@
+
+textarea {
+    border: none;
+    outline: none;
+
+    color: #2196F3!important;
+
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+
+    resize: none; /*remove the resize handle on the bottom right*/
+}
+
+.w3-text-blue input, .w3-text-blue textarea {
+    color: #2196F3;
+}
+
+.w3-text-green input, .w3-text-green textarea {
+    color: #4CAF50;
+}
+
+/* .w3-text-green .w3-btn, .w3-text-blue .w3-btn {
+    color: inherit;
+} */
+
+.link {
+    padding-left: 10px;
+    display: block;
+}
+
+.link + .link {
+    margin-top: 3px;
+}
+
+.link {
+    text-decoration: none;
+}
+
+.link:link {
+    text-decoration: none;
+}
+  
+.link:visited {
+    text-decoration: none;
+}
+
+.link:hover {
+    text-decoration: none;
+    background-color: #4CAF50;
+}
+
+.link:active {
+    text-decoration: none;
+}
+
+.action_btn:hover {
+    color: #2196F3;
+}
+
+.dir {
+
+}
+
+.file {
+
+}
+
+i {
+    margin-right: 5px;
+}

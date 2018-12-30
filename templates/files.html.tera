@@ -1,0 +1,32 @@
+{% extends "base" %}
+{% block content %}
+
+
+<div class="w3-panel w3-mobile w3-card">
+
+    <p>
+        <h3>You are at {{base}}
+        <a href="/upload{{parent_base}}" class="action_btn w3-padding-large" style="float:right;"><i class="fa fa-angle-up"></i></a></h3>
+    </p>
+
+    <p>
+        <h4 class="w3-text-blue">Dirs</h4>
+        {% for s in dirs %}
+            <a href="/upload{{base}}/{{s}}" class="link dir w3-round-xlarge"> 
+                <i class="fa fa-folder"></i><span>{{s}}</span>
+            </a>
+        {% endfor %}
+    </p>
+
+
+    <p>
+        <h4 class="w3-text-blue">Files</h4>
+        {% for s in files %}
+            <a href="/upload{{base}}/{{s}}" target="_blank" class="link file w3-round-xlarge"> 
+                 <i class="fa fa-file"></i><span>{{s}}</span>
+            </a>
+        {% endfor %}
+    </p>
+</div>
+
+{% endblock content %}

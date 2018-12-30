@@ -1,84 +1,24 @@
 
 use rocket::response::{Response, NamedFile};
-use rocket::{Route, Rocket};
+use rocket::{Rocket};
 
-use std::io::Cursor;
-use std::ffi::OsString;
 use std::io::{Write};
-use std::fs::{File, create_dir_all, DirEntry};
+use std::fs::{File, create_dir_all, DirEntry, self};
 use std::path::{Path, PathBuf};
-use std::io;
 
-#[derive(Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-enum FileType {
-    Folder, File, SysLink, None
-}
 
-#[derive(Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-struct OSFile {
-    name: String,
-    file_type: FileType,
-}
+use rocket::Request;
+use rocket::response::{self, Responder};
+use rocket_contrib::Template;
 
-impl OSFile {
-    fn new(f: DirEntry) -> OSFile {
-        let file_type = match f.file_type() {
-            Ok(ft) => {
-                if ft.is_file() {
-                    FileType::File
-                } else if ft.is_dir() {
-                    FileType::Folder
-                } else {
-                    FileType::SysLink
-                }
-            },
-            Err(_) => FileType::None
-        };
-
-        let name = match f.file_name().into_string() {
-            Ok(s) => s,
-            Err(e) => "ERROR, NO FUCKING FILE".to_string(),
-        };
-
-        OSFile {
-            name, file_type
-        }
-    }
-}
-
-#[derive(Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-struct Folder {
-    name: String,
-    children: Vec<OSFile>,
-}
-
-#[derive(Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-struct Out {
-    token: String,
-    folder: Folder,
-}
-
-impl Out {
-    fn new(name: PathBuf, children: Vec<OSFile>) -> Out {
-        let token = "My Super Secret Token".to_string();
-        let folder = Folder {
-            name: name.to_str().unwrap_or("").to_string(), children
-        };
-
-        Out {
-            folder, token
-        }
-    }
-}
+use crate::util::Context;
+use crate::auth;
+use crate::errors::*;
 
 
 #[post("/upload/<path..>", data = "<data>")]
-pub fn post(data: Vec<u8>, path: PathBuf) -> io::Result<String> {
-    let mut path = Path::new("./upload").join(path);
+pub fn post(data: Vec<u8>, path: PathBuf, user: auth::Auth) -> Result<String> {
+    let mut path = Path::new(&format!("./upload/{}", user.username)).join(path);
     let pf = path.clone();
     
     create_dir_all(path.parent().unwrap())?;
@@ -116,40 +56,74 @@ pub fn post(data: Vec<u8>, path: PathBuf) -> io::Result<String> {
 }
 
 #[get("/upload")]
-pub fn get_root<'a>() -> Option<Response<'a>> {
-    get(PathBuf::new())
+fn get_root<'r>(user: auth::Auth) -> Result<FileWrapper<'r>> {
+    get(user, PathBuf::new())
 }
 
-#[get("/upload/<path..>")]
-pub fn get<'a>(path: PathBuf) -> Option<Response<'a>> {
-    let path = Path::new("./upload").join(path);
+fn is_file(d: &DirEntry) -> bool {
+    d.file_type().map(|x| x.is_file()).unwrap_or(false)
+}
 
+pub enum FileWrapper<'r> {
+    Template(Template),
+    Response(Response<'r>),
+}
+
+impl<'r> Responder<'r> for FileWrapper<'r> {
+    #[inline(always)]
+    fn respond_to(self, req: &Request) -> response::Result<'r> {
+        match self {
+            FileWrapper::Template(t) => Response::build()
+                .merge(t.respond_to(req)?)
+                .ok(),
+            FileWrapper::Response(r) => Response::build()
+                .merge(r.respond_to(req)?)
+                .ok()
+        }
+    }
+}
+
+pub fn get_context(user: auth::Auth, file: PathBuf) -> Result<Context> {
+
+        let mut parent_base: PathBuf = file.clone();
+        parent_base.pop();
+
+        let base = Path::new("/").join(file.clone());
+        let parent_base = Path::new("/").join(parent_base);
+
+        let path = Path::new(&format!("upload/{}", user.username)).join(file);
+
+        if !path.exists() {
+            println!("making dir {:?}", path);
+            fs::create_dir_all(path.clone()).chain_err(|| "Could not create path")?;
+        }
+
+        let dirs = path.read_dir().chain_err(|| "Could not read files of path")?;
+        let (files, dirs): (Vec<DirEntry>, Vec<DirEntry>) = dirs.filter_map(|x| x.ok()).partition(is_file);
+        
+        let files: Vec<String> = files.iter().filter_map(|d| d.file_name().into_string().ok()).collect();
+        let dirs: Vec<String> = dirs.iter().filter_map(|d| d.file_name().into_string().ok()).collect();
+
+        Ok(Context::new()
+            .insert("files", files)
+            .insert("dirs", dirs)
+            .insert("username", user.username)
+            .insert("base", base)
+            .insert("parent_base", parent_base))
+}
+
+#[get("/upload/<file..>")]
+fn get<'r>(user: auth::Auth, file: PathBuf) -> Result<FileWrapper<'r>> {
+
+    let path = Path::new(&format!("upload/{}", user.username)).join(file.clone());
     if path.is_file() {
-        println!("getting {:?}", path);
-        match NamedFile::open(path) {
-            Ok(body) => Some(Response::build()
-                .streamed_body(body)
-                .finalize()),
-            Err(e) => {
-                println!("Error {:?}", e);
-                None
-            }
-        }
-    }else{
-        if let Ok(dirs) = path.read_dir() {
-            let dirs: Vec<OSFile> = dirs
-                .filter_map(|d| 
-                    d.ok().map(|d| OSFile::new(d))).collect();
-            let out = Out::new(path, dirs);
-            Some(Response::build()
-                .streamed_body(Cursor::new(serde_json::to_string(&out).unwrap()))
-                .finalize())
-
-        } else {
-            Some(Response::build()
-                .streamed_body(Cursor::new("you made a fucking mistake"))
-                .finalize())
-        }
+        let body = NamedFile::open(path).chain_err(|| "Could not open path")?;
+        Ok(FileWrapper::Response(Response::build()
+            .streamed_body(body)
+            .finalize()))
+    } else {
+        let c = get_context(user, file)?;
+        Ok(FileWrapper::Template(Template::render("files", &c.inner())))
     }
 }
 

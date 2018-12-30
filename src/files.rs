@@ -1,33 +1,14 @@
 
 
-use rocket::{Route, Rocket};
-use rocket::Outcome;
-use rocket::response::{Response, Redirect, NamedFile};
-use rocket::request::{self, Request, FromRequest};
+use rocket::{Rocket};
+use rocket::response::{Response, NamedFile};
 use rocket::http::ContentType;
 
 use std::path::{Path, PathBuf};
 
-pub struct ApiKey;
-
-impl<'a, 'r> FromRequest<'a, 'r> for ApiKey {
-    type Error = ();
-
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<ApiKey, ()> {
-        let uri = request.uri().to_string();
-        if let Some(ext) = Path::new(&uri).extension() {
-            if ext == "wasm" {
-                return Outcome::Success(ApiKey);
-            }
-        }
-
-        Outcome::Forward(())
-    }
-}
-
-#[get("/<file..>", rank = 1)]
-fn wasm_files<'a>(file: PathBuf, _key: ApiKey) -> Option<Response<'a>> {
-    match NamedFile::open(Path::new("WWW/").join(file)) {
+#[get("/wasm/<file..>")]
+fn wasm<'a>(file: PathBuf) -> Option<Response<'a>> {
+    match NamedFile::open(Path::new("wasm/").join(file)) {
         Ok(body) => Some(Response::build()
             .header(ContentType::new("application", "wasm"))
             .streamed_body(body)
@@ -36,17 +17,11 @@ fn wasm_files<'a>(file: PathBuf, _key: ApiKey) -> Option<Response<'a>> {
     }
 }
 
-#[get("/<file..>", rank = 2)]
-fn files(file: PathBuf) -> Option<NamedFile> {
-    // is file a file or a directory?
-    NamedFile::open(Path::new("WWW/").join(file)).ok()
-}
-
-#[get("/", rank = 3)]
-fn home() -> Redirect {
-    Redirect::to("/index.html")
+#[get("/style/<file..>")]
+fn style(file: PathBuf) -> Option<NamedFile> {
+    NamedFile::open(Path::new("style/").join(file)).ok()
 }
 
 pub fn fuel(r: Rocket) -> Rocket {
-    r.mount("/", routes![wasm_files, files, home])
+    r.mount("/", routes![wasm, style])
 }

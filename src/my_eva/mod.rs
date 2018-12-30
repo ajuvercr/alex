@@ -1,15 +1,11 @@
 
 use error_chain::ChainedError;
-use futures::executor::block_on;
-use std::sync::Mutex;
+// use futures::executor::block_on;
 
 use serde_json;
-use rocket::{Route, Rocket, State};
-use rocket_contrib::Json;
+use rocket::{Rocket, State};
+use rocket_contrib::json::Json;
 
-use eva::Result;
-use eva::database::Database;
-use eva::errors::*;
 use eva::configuration::{SchedulingStrategy, Configuration};
 
 pub mod my_db;
@@ -67,6 +63,6 @@ pub fn get(s: State<Configuration>) -> serde_json::Result<String> {
 #[post("/eva", data="<data>")]
 pub fn new_task(data: Json<my_db::MNewTask>, s: State<Configuration>) -> String {
     println!("data {:?}", data);
-    block_on(eva::add(&s, eva::NewTask::from(&data.into_inner())));
+    // block_on(eva::add(&s, eva::NewTask::from(&data.into_inner())));
     "Success".to_string()
 }

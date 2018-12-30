@@ -1,0 +1,10 @@
+{% extends "base" %}
+{% block content %}
+
+<h1>Hello there {{ username }}</h1>
+
+<p> Here is where you can choose what to do </p>
+<p>Upload and Download files, to share with yourself, <a href="/upload">link</a></p>
+<p>Write and read diary entries, <a href="/diary">link</a></p>
+
+{% endblock content %}

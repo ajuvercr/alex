@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+    <head>
+        <meta name="viewport" 
+            content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" 
+            href="https://www.w3schools.com/w3css/4/w3.css">    
+        <link rel="stylesheet" 
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link rel="stylesheet" 
+            href="/style/style.css">    
+    </head>
+    <body>
+        <div class="w3-bar w3-light-gray">
+            <a class="w3-button w3-bar-item" href="/">
+                <b>Home</b>
+            </a>
+            {% if username %}
+                <a class="w3-button w3-bar-item" href="/diary">
+                    <b>Diary</b>
+                </a>
+                <a class="w3-button w3-bar-item" href="/upload">
+                    <b>Files</b>
+                </a>
+                <a class="w3-button w3-bar-item" style="float: right;" href="/logout">
+                    <b>Logout</b>
+                </a>
+                <span class="w3-bar-item" style="float: right;">Hello {{username}}</span>
+            {% endif %}
+        </div>
+
+        <div class="w3-content">
+            {% block content %}
+            {% endblock content %}
+            
+            {% if errors %}
+                <div class="w3-red w3-panel w3-display-container">
+                  <span onclick="this.parentElement.style.display='none'" 
+                    class="w3-button w3-display-topright" style="font-weight: bolder">&times;</span>
+                    <h3>There was an error!</h3>
+                    <div class="w3-padding-small">
+                        {% for error in errors %}
+                            <p>{{error}}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+    </body>
+</html>

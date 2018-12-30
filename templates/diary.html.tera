@@ -1,0 +1,78 @@
+{% extends "base" %}
+{% block content %}
+
+<iframe width="0" height="0" style="display: None;" name="dummyframe" id="dummyframe"></iframe>
+
+<form class="w3-container w3-text-blue" action="/diary" method="post" targer="#dummyframe">
+
+    <p>
+        <input name="title" class="w3-input" type="text" autofocus placeholder="Title">
+    </p>
+
+    <p class="w3-row-padding">
+        <div class="w3-half" style="padding-right: 40px;">
+            <div class="w3-mobile w3-card">
+                <textarea name="content" class="w3-padding w3-input" style="min-height: 400px; width: 100%;" id="inputfield" wrap="hard" onkeypress="changeText" placeholder="Content"></textarea>
+            </div>
+        </div>
+
+        <div class="w3-half" style="padding-left: 40px;">
+            <div class="w3-mobile w3-card">
+                <div class="w3-padding" style="min-height: 400px; width: 100%" id="outputfield">
+                    Pandoc output
+                </div>
+            </div>
+        </div>
+    </p>
+    <p>
+        <input style="margin-top: 24px;" type="submit" value="Submit" class="w3-btn w3-blue"/>
+    </p>
+
+
+</form>
+
+<script>
+    {% if port %}
+        const PORT = {{port}};
+    {% else %}
+        const PORT = 3012;
+    {% endif %}
+
+    const input = document.getElementById("inputfield");
+    const output = document.getElementById("outputfield");
+    var buzzy = false;
+
+    input.addEventListener("input", changeText);
+    input.addEventListener("propertychange", changeText);
+
+    function changeText() {
+        const s = input.value;
+        input.rows = s.split("\n").length;
+        if(!buzzy) {
+            buzzy = true;
+            connection.send(s);
+        }
+    }
+
+    window.WebSocket = window.WebSocket || window.MozWebSocket;
+
+    var connection = new WebSocket('ws://'+window.location.hostname+":"+PORT);
+
+    connection.onopen = function () {
+        console.log("connection is open");
+    };
+
+    connection.onerror = function (error) {
+        // an error occurred when sending/receiving data
+        console.log("errored");
+        console.log(error);
+    };
+
+    connection.onmessage = function (message) {
+        output.innerHTML = message.data;
+        buzzy = false;
+    };
+
+</script>
+
+{% endblock content %}
