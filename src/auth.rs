@@ -156,7 +156,7 @@ impl AuthState {
         match self.tokens.lock() {
             Ok(state) => {
                 if let Some((at, t)) = state.get(username) {
-                    return Ok(*t == token && Instant::now().duration_since(*at) < Duration::from_secs(60));
+                    return Ok(*t == token && Instant::now().duration_since(*at) < Duration::from_secs(600));
                 }
             },
             Err(_) => bail!("Could not lock state!"),

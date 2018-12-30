@@ -1,6 +1,7 @@
 
 use rocket::Rocket;
 use rocket::request::Form;
+use rocket::response::Redirect;
 use rocket_contrib::Template;
 
 use chrono::Local;
@@ -20,7 +21,7 @@ pub struct DairyEntry {
 
 // TODO add real database
 #[post("/diary", data="<data>")]
-pub fn dairy(data: Form<DairyEntry>, user: auth::Auth) -> Result<()> {
+pub fn dairy(data: Form<DairyEntry>, user: auth::Auth) -> Result<Redirect> {
     let data: DairyEntry = data.into_inner();
 
     let local = Local::now();
@@ -32,7 +33,7 @@ pub fn dairy(data: Form<DairyEntry>, user: auth::Auth) -> Result<()> {
     let mut f = File::create(path)?;
     f.write_all(data.content.as_bytes())?;
 
-    Ok(())
+    Ok(Redirect::to("/diary"))
 }
 
 #[get("/diary")]
