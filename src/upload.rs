@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 
 use rocket::Request;
 use rocket::response::{self, Responder};
-use rocket_contrib::Template;
+use rocket_contrib::templates::Template;
 
 use crate::util::Context;
 use crate::auth;
@@ -85,11 +85,7 @@ impl<'r> Responder<'r> for FileWrapper<'r> {
 
 pub fn get_context(user: auth::Auth, file: PathBuf) -> Result<Context> {
 
-        let mut parent_base: PathBuf = file.clone();
-        parent_base.pop();
-
-        let base = Path::new("/").join(file.clone());
-        let parent_base = Path::new("/").join(parent_base);
+        let path_comps: Vec<String> = vec![String::from("upload")].iter().cloned().chain(file.iter().filter_map(|x| x.to_str()).map(|x| x.to_string())).collect();
 
         let path = Path::new(&format!("upload/{}", user.username)).join(file);
 
@@ -104,12 +100,15 @@ pub fn get_context(user: auth::Auth, file: PathBuf) -> Result<Context> {
         let files: Vec<String> = files.iter().filter_map(|d| d.file_name().into_string().ok()).collect();
         let dirs: Vec<String> = dirs.iter().filter_map(|d| d.file_name().into_string().ok()).collect();
 
-        Ok(Context::new()
+        let c = Context::new()
             .insert("files", files)
             .insert("dirs", dirs)
             .insert("username", user.username)
-            .insert("base", base)
-            .insert("parent_base", parent_base))
+            .insert("path", path_comps);
+
+        println!("{:?}", c);
+
+        Ok(c)
 }
 
 #[get("/upload/<file..>")]

@@ -1,5 +1,4 @@
-#![feature(plugin, async_await, await_macro, futures_api, custom_derive)]
-#![plugin(rocket_codegen)]
+#![feature(plugin, async_await, await_macro, futures_api, proc_macro_hygiene, decl_macro)]
 
 #[macro_use]
 extern crate error_chain;
@@ -12,6 +11,8 @@ extern crate serde_json;
 
 extern crate chrono;
 
+
+#[macro_use]
 extern crate rocket;
 extern crate rocket_contrib;
 
@@ -26,11 +27,14 @@ extern crate futures_fs;
 
 extern crate ws;
 
+#[macro_use] extern crate tera;
+#[macro_use] extern crate lazy_static;
+
 use rocket::{State};
 use rocket::request::Form;
 use rocket::response::{Redirect};
 use rocket::http::Cookies;
-use rocket_contrib::Template;
+use rocket_contrib::templates;
 
 use std::path::PathBuf;
 
@@ -43,11 +47,13 @@ pub use self::errors::*;
 
 pub mod auth;
 pub mod util;
+pub mod template;
 use self::util::Context;
+use template::Template;
 
 pub mod errors {
     use rocket::response::{self, Responder};
-    use rocket_contrib::Template;
+    use rocket_contrib::templates::Template;
     use rocket::{Request};
     
     use crate::util::Context;
@@ -168,8 +174,10 @@ fn rocket() -> rocket::Rocket {
 fn main() -> Result<()> {
     rocket()
         .manage(auth::AuthState::new()?)
-        .attach(Template::fairing())
+        .attach(templates::Template::fairing())
     .launch();
+
+    template::Test::test();
 
     Ok(())
 }

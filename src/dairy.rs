@@ -2,7 +2,7 @@
 use rocket::Rocket;
 use rocket::request::Form;
 use rocket::response::Redirect;
-use rocket_contrib::Template;
+use rocket_contrib::templates::Template;
 
 use chrono::Local;
 use std::io::Write;

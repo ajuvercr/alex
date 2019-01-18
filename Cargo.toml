@@ -5,8 +5,8 @@ authors = ["silvius_seacoal"]
 edition = "2018"
 
 [dependencies]
-rocket = "0.3.16"
-rocket_codegen = "0.3.16"
+rocket = "0.4.0"
+rocket_codegen = "0.4.0"
 base64 = "0.9.3"
 chrono = "0.4"
 config = "0.8"
@@ -24,7 +24,10 @@ bytes = "0.4.11"
 
 ws = "0.7.9"
 
+lazy_static = "1.0"
+tera = "0.11.20"
+
 [dependencies.rocket_contrib]
 default-features = false
-version = "0.3.16"
+version = "0.4.0"
 features = ["tera_templates", "json"]

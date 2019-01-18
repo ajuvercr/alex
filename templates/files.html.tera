@@ -1,18 +1,23 @@
 {% extends "base" %}
 {% block content %}
 
-
 <div class="w3-panel w3-mobile w3-card">
 
     <p>
-        <h3>You are at {{base}}
-        <a href="/upload{{parent_base}}" class="action_btn w3-padding-large" style="float:right;"><i class="fa fa-angle-up"></i></a></h3>
+        <h3>You are at <span id="base">{{ path | slice(start=1) | join(sep="/") }}</span>
+        <a href='/ {{ path | reverse | reverse | join(sep="/") }}' class="action_btn w3-padding-large" style="float:right;"><i class="fa fa-angle-up"></i></a></h3>
     </p>
+
+    <div style="display: flex; align-items: center;">
+        <a onclick="redirect()" class="action_btn"><i class="fa fa-plus"></i></a>
+        <input id="input_field" class="w3-input w3-half" type="text"/>
+        <button class="w3-btn" onclick="openFileChooser()">Upload file(s)</button>
+    </div>
 
     <p>
         <h4 class="w3-text-blue">Dirs</h4>
         {% for s in dirs %}
-            <a href="/upload{{base}}/{{s}}" class="link dir w3-round-xlarge"> 
+            <a href='/ {{ path | concat(with=s) | join(sep="/") }}' class="link dir w3-round-xlarge"> 
                 <i class="fa fa-folder"></i><span>{{s}}</span>
             </a>
         {% endfor %}
@@ -22,11 +27,83 @@
     <p>
         <h4 class="w3-text-blue">Files</h4>
         {% for s in files %}
-            <a href="/upload{{base}}/{{s}}" target="_blank" class="link file w3-round-xlarge"> 
+            <a href='/ {{ path | concat(with=s) | join(sep="/") }}' target="_blank" class="link file w3-round-xlarge"> 
                  <i class="fa fa-file"></i><span>{{s}}</span>
             </a>
         {% endfor %}
     </p>
 </div>
+
+<input id="file_chooser" type="file" className="gone" onchange="uploadFiles" multiple/>
+
+<script>
+    const a = document.getElementById("new_folder");
+    const input = document.getElementById("input_field");
+    const base = document.getElementById("base").innerHTML;
+
+
+    function save(data, file) {
+        console.log("saving to ", file);
+        var fileData = new Blob([data]);
+        if (window.navigator.msSaveOrOpenBlob) // IE10+
+            window.navigator.msSaveOrOpenBlob(fileData, file.name);
+        else { // Others
+            var a = document.createElement("a"),
+                    url = URL.createObjectURL(fileData);
+            a.href = url;
+            a.download = file.name;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(function() {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);  
+            }, 0); 
+        }
+    }
+
+    function redirect() {
+        if (input.value) {
+            console.log("/upload"+base+"/"+input.value);
+           // location.href = "/upload"+base+"/"+input.value;
+        }
+    }
+
+    function uploadFiles(files) {
+        console.log("Upload files");
+        console.log(files);
+        files = files.target.files;
+        console.log(files);
+
+        for(let i = 0; i < files.length; i++) {
+            const file = files[i];
+
+            const folder = base+"/upload/";
+            const url = folder+file.name;
+
+            console.log(url);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', url);
+            xhr.setRequestHeader('Content-Type', file.type);
+            xhr.send(file);
+        }
+    }
+
+    function openFileChooser() {
+        console.log("open filechooser");
+
+        const input = document.getElementById("file_chooser");
+        input.click();
+    }
+
+    document.getElementById("file_chooser").onchange = uploadFiles;
+
+
+    /*
+        TODO make backspace go to href="/upload{{parent_base}}"
+        and enter to location.href = "/upload"+base+"/"+input.value;
+    */
+
+</script>
 
 {% endblock content %}
