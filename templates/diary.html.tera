@@ -1,4 +1,4 @@
-{% extends "base" %}
+{% extends "base.html.tera" %}
 {% block content %}
 
 <iframe width="0" height="0" style="display: None;" name="dummyframe" id="dummyframe"></iframe>

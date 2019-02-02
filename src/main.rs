@@ -1,5 +1,4 @@
-#![feature(plugin, async_await, await_macro, futures_api, custom_derive)]
-#![plugin(rocket_codegen)]
+#![feature(plugin, async_await, await_macro, futures_api, proc_macro_hygiene, decl_macro)]
 
 #[macro_use]
 extern crate error_chain;
@@ -12,8 +11,11 @@ extern crate serde_json;
 
 extern crate chrono;
 
+#[macro_use]
 extern crate rocket;
 extern crate rocket_contrib;
+
+#[macro_use] extern crate tera;
 
 extern crate base64;
 extern crate rand;
@@ -30,7 +32,6 @@ use rocket::{State};
 use rocket::request::Form;
 use rocket::response::{Redirect};
 use rocket::http::Cookies;
-use rocket_contrib::Template;
 
 use std::path::PathBuf;
 
@@ -43,12 +44,15 @@ pub use self::errors::*;
 
 pub mod auth;
 pub mod util;
+pub mod template;
+use template::Template;
+
 use self::util::Context;
 
 pub mod errors {
     use rocket::response::{self, Responder};
-    use rocket_contrib::Template;
     use rocket::{Request};
+    use crate::template::Template;
     
     use crate::util::Context;
 
@@ -93,8 +97,8 @@ pub mod errors {
                 let c = c.clone().insert("errors", errors);
                 Template::render(t.clone(), &c.inner()).respond_to(x)
             } else {
-                let context = json!({"errors": errors,});
-                Template::render("error", &context).respond_to(x)
+                let context = Context::new().insert("errors", errors);
+                Template::render("error", &context.inner()).respond_to(x)
             }
         }
     }
@@ -168,7 +172,7 @@ fn rocket() -> rocket::Rocket {
 fn main() -> Result<()> {
     rocket()
         .manage(auth::AuthState::new()?)
-        .attach(Template::fairing())
+        .attach(template::TemplateFairing)
     .launch();
 
     Ok(())

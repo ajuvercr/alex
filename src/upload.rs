@@ -9,8 +9,8 @@ use std::path::{Path, PathBuf};
 
 use rocket::Request;
 use rocket::response::{self, Responder};
-use rocket_contrib::Template;
 
+use crate::template::Template;
 use crate::util::Context;
 use crate::auth;
 use crate::errors::*;
