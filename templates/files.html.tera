@@ -1,4 +1,4 @@
-{% extends "base" %}
+{% extends "base.html.tera" %}
 {% block content %}
 
 <div class="w3-panel w3-mobile w3-card">

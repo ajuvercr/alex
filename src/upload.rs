@@ -9,8 +9,8 @@ use std::path::{Path, PathBuf};
 
 use rocket::Request;
 use rocket::response::{self, Responder};
-use rocket_contrib::templates::Template;
 
+use crate::template::Template;
 use crate::util::Context;
 use crate::auth;
 use crate::errors::*;
@@ -104,7 +104,8 @@ pub fn get_context(user: auth::Auth, file: PathBuf) -> Result<Context> {
             .insert("files", files)
             .insert("dirs", dirs)
             .insert("username", user.username)
-            .insert("path", path_comps);
+            .insert("path", path_comps)
+            .insert("parent_base", "/");
 
         println!("{:?}", c);
 

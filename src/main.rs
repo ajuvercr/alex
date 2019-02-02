@@ -11,10 +11,11 @@ extern crate serde_json;
 
 extern crate chrono;
 
-
 #[macro_use]
 extern crate rocket;
 extern crate rocket_contrib;
+
+#[macro_use] extern crate tera;
 
 extern crate base64;
 extern crate rand;
@@ -27,14 +28,10 @@ extern crate futures_fs;
 
 extern crate ws;
 
-#[macro_use] extern crate tera;
-#[macro_use] extern crate lazy_static;
-
 use rocket::{State};
 use rocket::request::Form;
 use rocket::response::{Redirect};
 use rocket::http::Cookies;
-use rocket_contrib::templates;
 
 use std::path::PathBuf;
 
@@ -48,13 +45,14 @@ pub use self::errors::*;
 pub mod auth;
 pub mod util;
 pub mod template;
-use self::util::Context;
 use template::Template;
+
+use self::util::Context;
 
 pub mod errors {
     use rocket::response::{self, Responder};
-    use rocket_contrib::templates::Template;
     use rocket::{Request};
+    use crate::template::Template;
     
     use crate::util::Context;
 
@@ -99,8 +97,8 @@ pub mod errors {
                 let c = c.clone().insert("errors", errors);
                 Template::render(t.clone(), &c.inner()).respond_to(x)
             } else {
-                let context = json!({"errors": errors,});
-                Template::render("error", &context).respond_to(x)
+                let context = Context::new().insert("errors", errors);
+                Template::render("error", &context.inner()).respond_to(x)
             }
         }
     }
@@ -174,10 +172,8 @@ fn rocket() -> rocket::Rocket {
 fn main() -> Result<()> {
     rocket()
         .manage(auth::AuthState::new()?)
-        .attach(templates::Template::fairing())
+        .attach(template::TemplateFairing)
     .launch();
-
-    template::Test::test();
 
     Ok(())
 }

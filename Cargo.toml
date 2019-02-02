@@ -22,12 +22,11 @@ futures-fs = "0.0.5"
 futures = "0.1.25"
 bytes = "0.4.11"
 
-ws = "0.7.9"
-
-lazy_static = "1.0"
 tera = "0.11.20"
+
+ws = "0.7.9"
 
 [dependencies.rocket_contrib]
 default-features = false
 version = "0.4.0"
-features = ["tera_templates", "json"]
+features = ["json"]

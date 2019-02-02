@@ -2,7 +2,6 @@
 use rocket::Rocket;
 use rocket::request::Form;
 use rocket::response::Redirect;
-use rocket_contrib::templates::Template;
 
 use chrono::Local;
 use std::io::Write;
@@ -12,6 +11,7 @@ use std::fs::{File, create_dir_all};
 use crate::errors::*;
 use crate::auth;
 use crate::util::Context;
+use crate::template::Template;
 
 #[derive(FromForm, Debug, Clone)]
 pub struct DairyEntry {
