@@ -1,5 +1,5 @@
 use super::schema::*;
-use chrono::{NaiveDateTime, DateTime, Utc};
+use chrono::{NaiveDateTime};
 
 #[derive(Queryable, Identifiable, AsChangeset, Debug)]
 pub struct Post {
@@ -26,19 +26,20 @@ pub struct Topic {
     pub name: String,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug)]
 #[table_name="posts"]
 pub struct NewPost<'a> {
     pub title: &'a str,
     pub body: &'a str,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug)]
 #[table_name="users"]
 pub struct NewUser<'a> {
     pub name: &'a str,
     pub email: &'a str,
     pub password_hash: i64,
+    pub uuid: i32,
 }
 
 joinable!(topics -> users (user_id));

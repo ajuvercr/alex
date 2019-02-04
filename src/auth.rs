@@ -68,8 +68,8 @@ pub type Token = u64;
 
 #[derive(FromForm, Debug, Clone)]
 pub struct Signup {
-    username: String,
-    password: String,
+    pub username: String,
+    pub password: String,
 }
 
 impl Signup {

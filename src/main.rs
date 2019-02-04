@@ -4,14 +4,14 @@
 
 #[macro_use] extern crate serde_derive;
 extern crate serde;
-#[macro_use] extern crate serde_json;
+extern crate serde_json;
 
 extern crate chrono;
 
 #[macro_use] extern crate rocket;
 #[macro_use] extern crate rocket_contrib;
 
-#[macro_use] extern crate tera;
+extern crate tera;
 
 #[macro_use] extern crate diesel;
 
@@ -44,10 +44,13 @@ pub mod auth;
 pub mod util;
 pub mod template;
 pub mod database;
+
+use database::DbConn;
 use template::Template;
 
 use self::util::Context;
 
+#[allow(deprecated)]
 pub mod errors {
     use rocket::response::{self, Responder};
     use rocket::{Request};
@@ -129,9 +132,11 @@ fn signup_red() -> Redirect {
 }
 
 #[post("/signup", data="<signup>")]
-fn signup(mut cookies: Cookies, signup: Form<auth::Signup>, auth: State<auth::AuthState>) -> Result<Redirect> {
+fn signup(mut cookies: Cookies, signup: Form<auth::Signup>, auth: State<auth::AuthState>, conn: DbConn) -> Result<Redirect> {
     let signup: auth::Signup = signup.into_inner();
     
+    let u = database::add_user(&signup.username, &signup.password, 0, &conn);
+    println!("{:?}", u);
     auth.add_user(signup, &mut cookies).chain_err(|| ErrorKind::TemplateError(Context::new(), "index", "Cannot add user to database"))?;
 
     Ok(Redirect::to("/"))
@@ -143,9 +148,10 @@ fn login_red() -> Redirect {
 }
 
 #[post("/login", data="<signup>")]
-fn login(mut cookies: Cookies, signup: Form<auth::Signup>, auth: State<auth::AuthState>) -> Result<Redirect> {
+fn login(mut cookies: Cookies, signup: Form<auth::Signup>, auth: State<auth::AuthState>, conn: DbConn) -> Result<Redirect> {
     let signup: auth::Signup = signup.into_inner();
 
+    println!("{:?}", database::get_users(&conn));
     auth.auth_user(signup, &mut cookies).chain_err(|| ErrorKind::TemplateError(Context::new(), "index", "Incorrect login combination"))?;
 
     Ok(Redirect::to("/"))

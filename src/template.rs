@@ -56,7 +56,7 @@ impl Fairing for TemplateFairing {
     fn info(&self) -> Info {
         Info {
             name: "Custom Tera Templates",
-            kind: Kind::Response | Kind::Attach
+            kind: Kind::Attach
         }
     }
 
@@ -68,10 +68,6 @@ impl Fairing for TemplateFairing {
                 Err(rocket)
             }
         }
-    }
-
-    fn on_response(&self, request: &Request, response: &mut Response) {
-        // maybe this one I don't need
     }
 }
 
