@@ -1,0 +1,2 @@
+[global.databases]
+sqlite_logs = { url = "postgres://postgres:blablabla@localhost/alex_db" }

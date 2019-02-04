@@ -1,21 +1,19 @@
 #![feature(plugin, async_await, await_macro, futures_api, proc_macro_hygiene, decl_macro)]
 
-#[macro_use]
-extern crate error_chain;
+#[macro_use] extern crate error_chain;
 
-#[macro_use]
-extern crate serde_derive;
+#[macro_use] extern crate serde_derive;
 extern crate serde;
-#[macro_use]
-extern crate serde_json;
+#[macro_use] extern crate serde_json;
 
 extern crate chrono;
 
-#[macro_use]
-extern crate rocket;
-extern crate rocket_contrib;
+#[macro_use] extern crate rocket;
+#[macro_use] extern crate rocket_contrib;
 
 #[macro_use] extern crate tera;
+
+#[macro_use] extern crate diesel;
 
 extern crate base64;
 extern crate rand;
@@ -45,6 +43,7 @@ pub use self::errors::*;
 pub mod auth;
 pub mod util;
 pub mod template;
+pub mod database;
 use template::Template;
 
 use self::util::Context;
@@ -173,6 +172,7 @@ fn main() -> Result<()> {
     rocket()
         .manage(auth::AuthState::new()?)
         .attach(template::TemplateFairing)
+        .attach(database::DbConn::fairing())
     .launch();
 
     Ok(())
