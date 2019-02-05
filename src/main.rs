@@ -26,16 +26,13 @@ extern crate futures_fs;
 
 extern crate ws;
 
-use rocket::{State};
-use rocket::request::Form;
-use rocket::response::{Redirect};
-use rocket::http::Cookies;
-
 use std::path::PathBuf;
 
-mod upload;
-mod dairy;
-mod files;
+mod mounts;
+// mod routes::upload;
+// mod routes::dairy;
+// mod routes::files;
+// mod routes::login;
 // mod my_eva;
 
 pub use self::errors::*;
@@ -45,73 +42,11 @@ pub mod util;
 pub mod template;
 pub mod database;
 
-use database::DbConn;
-use template::Template;
-
 use self::util::Context;
+use self::template::Template;
 
 #[allow(deprecated)]
-pub mod errors {
-    use rocket::response::{self, Responder};
-    use rocket::{Request};
-    use crate::template::Template;
-    
-    use crate::util::Context;
-
-    error_chain! {
-        types {
-            Error, ErrorKind, ResultExt, Result;
-        }
-
-        errors {
-            TemplateError(context: Context, template: &'static str, reason: &'static str) {
-                description("Error happend in a template")
-                display("{}", reason)
-            }
-
-            AuthError {
-                description("Username not found in database")
-                display("Username not found")
-            }
-        }
-
-        foreign_links {
-            JsonError(serde_json::Error);
-            IOError(std::io::Error);
-            DatabaseError(diesel::result::Error);
-        }
-    }
-
-
-    impl<'r> Responder<'r> for Error {
-        fn respond_to(self, x: &Request) -> response::Result<'r> {
-            let mut errors = Vec::new();
-            let mut error_list = self.iter();
-
-            if let Some(e) = error_list.next() {
-                errors.push(format!("Error: {}", e));
-            }
-
-            for e in error_list {
-                errors.push(format!("caused by: {}", e));
-            }
-
-            if let ErrorKind::TemplateError(c, t, _) = self.kind() {
-                let c = c.clone().insert("errors", errors);
-                Template::render(t.clone(), &c.inner()).respond_to(x)
-            } else {
-                let context = Context::new().insert("errors", errors);
-                Template::render("error", &context.inner()).respond_to(x)
-            }
-        }
-    }
-}
-
-#[get("/logout")]
-fn logout(user: auth::Auth, auth: State<auth::AuthState>) -> Result<Redirect> {
-    auth.invalidate_token(&user.username)?;
-    Ok(Redirect::to("/"))
-}
+pub mod errors;
 
 #[get("/")]
 fn secure_root(user: auth::Auth) -> Result<Template> {
@@ -127,37 +62,6 @@ fn root() -> Result<Template> {
     Ok(Template::render("index", &context.inner()))
 }
 
-#[get("/signup")]
-fn signup_red() -> Redirect {
-    Redirect::to("/")
-}
-
-#[post("/signup", data="<signup>")]
-fn signup(mut cookies: Cookies, signup: Form<auth::Signup>, auth: State<auth::AuthState>, conn: DbConn) -> Result<Redirect> {
-    let signup: auth::Signup = signup.into_inner();
-    
-    let u = database::add_user(&signup.username, &signup.password, 0, &conn);
-    println!("{:?}", u);
-    auth.add_user(signup, &mut cookies).chain_err(|| ErrorKind::TemplateError(Context::new(), "index", "Cannot add user to database"))?;
-
-    Ok(Redirect::to("/"))
-}
-
-#[get("/login")]
-fn login_red() -> Redirect {
-    Redirect::to("/")
-}
-
-#[post("/login", data="<signup>")]
-fn login(mut cookies: Cookies, signup: Form<auth::Signup>, auth: State<auth::AuthState>, conn: DbConn) -> Result<Redirect> {
-    let signup: auth::Signup = signup.into_inner();
-
-    println!("{:?}", database::get_users(&conn));
-    auth.auth_user(signup, &mut cookies).chain_err(|| ErrorKind::TemplateError(Context::new(), "index", "Incorrect login combination"))?;
-
-    Ok(Redirect::to("/"))
-}
-
 #[get("/<_file..>", rank = 3)]
 fn catch_all(_file: PathBuf) -> Result<Template> {
     let context = Context::new().insert("errors", vec!["Please Log In First"]);
@@ -167,12 +71,10 @@ fn catch_all(_file: PathBuf) -> Result<Template> {
 
 fn rocket() -> rocket::Rocket {
     let rocket = rocket::ignite();
-    let rocket = upload::fuel(rocket);
-    let rocket = dairy::fuel(rocket);
-    let rocket = files::fuel(rocket);
+    let rocket = mounts::fuel(rocket);
     // let rocket = my_eva::fuel(rocket);
 
-    rocket.mount("/", routes![root, secure_root, logout, signup, login, login_red, signup_red, catch_all])
+    rocket.mount("/", routes![root, secure_root, catch_all])
 }
 
 fn main() -> Result<()> {
