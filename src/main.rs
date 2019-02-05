@@ -78,6 +78,7 @@ pub mod errors {
         foreign_links {
             JsonError(serde_json::Error);
             IOError(std::io::Error);
+            DatabaseError(diesel::result::Error);
         }
     }
 

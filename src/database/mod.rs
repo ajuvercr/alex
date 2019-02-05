@@ -1,4 +1,6 @@
 
+use crate::errors::*;
+
 pub mod models;
 pub mod schema;
 use schema::{users, posts};
@@ -8,7 +10,7 @@ use diesel::RunQueryDsl;
 #[database("sqlite_logs")]
 pub struct DbConn(diesel::PgConnection);
 
-pub fn add_user<'a>(name: &'a str, email: &'a str, pw_hash: i64, conn: &DbConn) -> models::User {
+pub fn add_user<'a>(name: &'a str, email: &'a str, pw_hash: i64, conn: &DbConn) -> Result<models::User> {
     let new_user = models::NewUser {
         name, email,
         password_hash: pw_hash,
@@ -18,12 +20,11 @@ pub fn add_user<'a>(name: &'a str, email: &'a str, pw_hash: i64, conn: &DbConn) 
     diesel::insert_into(users::table)
         .values(&new_user)
         .get_result(&conn.0)
-        .expect("Error saving new user")
+        .chain_err(|| "Could not add user to DB!")
 }
 
-pub fn get_users(conn: &DbConn) -> Vec<models::User> {
-    
+pub fn get_users(conn: &DbConn) -> Result<Vec<models::User>> {
     users::table
         .load::<models::User>(&conn.0)
-        .expect("Error loading posts")
+        .chain_err(|| "Could not get users from DB!")
 }
