@@ -1,10 +1,13 @@
 use super::schema::*;
 use chrono::{NaiveDateTime};
 
+pub type ID = i32;
+pub type UUID = i32;
+
 #[derive(Queryable, Identifiable, AsChangeset, Debug)]
 pub struct Post {
-    pub id: i32,
-    pub uuid: i32,
+    pub id: ID,
+    pub uuid: UUID,
     pub title: String,
     pub body: String,
     pub created: NaiveDateTime,
@@ -12,17 +15,17 @@ pub struct Post {
 
 #[derive(Queryable, Identifiable, AsChangeset, Debug)]
 pub struct User {
-    pub id: i32,
-    pub uuid: i32,
-    pub name: String,
+    pub id: ID,
+    pub uuid: UUID,
     pub email: String,
+    pub name: String,
     pub password_hash: i64,
 }
 
 #[derive(Queryable, AsChangeset, Debug)]
 pub struct Topic {
-    pub post_id: i32,
-    pub user_id: i32,
+    pub post_id: ID,
+    pub user_id: ID,
     pub name: String,
 }
 
@@ -39,7 +42,7 @@ pub struct NewUser<'a> {
     pub name: &'a str,
     pub email: &'a str,
     pub password_hash: i64,
-    pub uuid: i32,
+    pub uuid: UUID,
 }
 
 joinable!(topics -> users (user_id));

@@ -5,12 +5,15 @@ use rocket::response::Redirect;
 
 use crate::errors::*;
 use crate::auth;
-use crate::util::Context;
+use crate::util::{Context, Signup};
 use crate::database::{DbConn, self};
 
 #[get("/logout")]
-fn logout(user: auth::Auth, auth: State<auth::AuthState>) -> Result<Redirect> {
-    auth.invalidate_token(&user.username)?;
+fn logout(cookies: Cookies, auth: State<auth::AuthState>) -> Result<Redirect> {
+    let uuid = cookies.get("uuid").and_then(|u| u.value().parse().ok());
+    if let Some(uuid) = uuid {
+        auth.invalidate_token(uuid)?;
+    }
     Ok(Redirect::to("/"))
 }
 
@@ -20,12 +23,12 @@ fn signup_red() -> Redirect {
 }
 
 #[post("/signup", data="<signup>")]
-fn signup(mut cookies: Cookies, signup: Form<auth::Signup>, auth: State<auth::AuthState>, conn: DbConn) -> Result<Redirect> {
-    let signup: auth::Signup = signup.into_inner();
+fn signup(mut cookies: Cookies, signup: Form<Signup<String>>, auth: State<auth::AuthState>, conn: DbConn) -> Result<Redirect> {
+    let signup: Signup<String> = signup.into_inner();
     
-    let u = database::add_user(&signup.username, &signup.password, 0, &conn);
-    println!("{:?}", u);
-    auth.add_user(signup, &mut cookies).chain_err(|| ErrorKind::TemplateError(Context::new(), "index", "Cannot add user to database"))?;
+    // let u = database::add_user(&signup.username, &signup.password, 0, &conn);
+    // println!("{:?}", u);
+    auth.add_user(signup.hashed(), &mut cookies, &conn).chain_err(|| ErrorKind::TemplateError(Context::new(), "index", "Cannot add user to database"))?;
 
     Ok(Redirect::to("/"))
 }
@@ -36,11 +39,17 @@ fn login_red() -> Redirect {
 }
 
 #[post("/login", data="<signup>")]
-fn login(mut cookies: Cookies, signup: Form<auth::Signup>, auth: State<auth::AuthState>, conn: DbConn) -> Result<Redirect> {
-    let signup: auth::Signup = signup.into_inner();
+fn login(mut cookies: Cookies, signup: Form<Signup<String>>, auth: State<auth::AuthState>, conn: DbConn) -> Result<Redirect> {
+    let signup: Signup<String> = signup.into_inner();
 
     println!("{:?}", database::get_users(&conn));
-    auth.auth_user(signup, &mut cookies).chain_err(|| ErrorKind::TemplateError(Context::new(), "index", "Incorrect login combination"))?;
+    // println!("{:?}",
+    //     database::joined()
+    //         .filter(database::with_user_UUID(10))
+    //         .load::<(models::Topic, models::Post, models::User)>(&conn.0)
+    //         .expect("couldn't load users")
+    // );
+    auth.auth_user(signup.hashed(), &mut cookies, &conn).chain_err(|| ErrorKind::TemplateError(Context::new(), "index", "Incorrect login combination"))?;
 
     Ok(Redirect::to("/"))
 }

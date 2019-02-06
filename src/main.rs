@@ -1,4 +1,5 @@
 #![feature(plugin, async_await, await_macro, futures_api, proc_macro_hygiene, decl_macro)]
+#![recursion_limit="4096"]
 
 #[macro_use] extern crate error_chain;
 
@@ -29,10 +30,6 @@ extern crate ws;
 use std::path::PathBuf;
 
 mod mounts;
-// mod routes::upload;
-// mod routes::dairy;
-// mod routes::files;
-// mod routes::login;
 // mod my_eva;
 
 pub use self::errors::*;
