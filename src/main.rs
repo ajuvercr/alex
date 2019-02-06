@@ -27,7 +27,8 @@ extern crate futures_fs;
 
 extern crate ws;
 
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
+use rocket::response::NamedFile;
 
 mod mounts;
 // mod my_eva;
@@ -59,6 +60,11 @@ fn root() -> Result<Template> {
     Ok(Template::render("index", &context.inner()))
 }
 
+#[get("/favicon.ico")]
+fn favicon() -> Option<NamedFile> {
+    NamedFile::open(Path::new("favicon.ico")).ok()
+}
+
 #[get("/<_file..>", rank = 3)]
 fn catch_all(_file: PathBuf) -> Result<Template> {
     let context = Context::new().insert("errors", vec!["Please Log In First"]);
@@ -71,7 +77,7 @@ fn rocket() -> rocket::Rocket {
     let rocket = mounts::fuel(rocket);
     // let rocket = my_eva::fuel(rocket);
 
-    rocket.mount("/", routes![root, secure_root, catch_all])
+    rocket.mount("/", routes![root, secure_root, favicon, catch_all])
 }
 
 fn main() -> Result<()> {
