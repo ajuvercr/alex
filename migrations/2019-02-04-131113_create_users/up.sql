@@ -2,6 +2,7 @@ CREATE TABLE posts (
   id SERIAL PRIMARY KEY,
   uuid INT NOT NULL,
   title VARCHAR NOT NULL,
+  synopsis TEXT,
   body TEXT NOT NULL,
   created TIMESTAMP NOT NULL
 );

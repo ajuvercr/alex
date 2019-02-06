@@ -8,6 +8,13 @@ pub struct Signup<T> {
     pub password: T,
 }
 
+#[derive(FromForm, Debug, Clone)]
+pub struct DairyEntry {
+    pub title: String,
+    pub synopsis: Option<String>,
+    pub content: String,
+}
+
 impl<T> Signup<T> {
     pub fn username(&self) -> String {
         self.username.clone()

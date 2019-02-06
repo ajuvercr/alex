@@ -3,6 +3,7 @@ table! {
         id -> Int4,
         uuid -> Int4,
         title -> Varchar,
+        synopsis -> Nullable<Text>,
         body -> Text,
         created -> Timestamp,
     }

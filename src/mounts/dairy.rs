@@ -10,14 +10,9 @@ use std::fs::{File, create_dir_all};
 
 use crate::errors::*;
 use crate::auth;
-use crate::util::Context;
+use crate::util::{Context, DairyEntry};
 use crate::template::Template;
 
-#[derive(FromForm, Debug, Clone)]
-pub struct DairyEntry {
-    title: String,
-    content: String,
-}
 
 // TODO add real database
 #[post("/diary", data="<data>")]

@@ -3,11 +3,9 @@ use crate::errors::*;
 pub mod models;
 pub mod schema;
 
-pub use models::{ID, UUID};
+pub use models::{ID, UUID, NewPost, NewUser};
 
 use schema::{users, posts, topics};
-
-use crate::util::Signup;
 
 use diesel::prelude::*;
 use diesel::sql_types::*;
@@ -36,7 +34,6 @@ pub fn topics() -> topics::table {
 
 
 type WithUserUUID<T> = Eq<users::uuid, T>;
-
 pub fn with_user_uuid<T>(uuid: T) -> WithUserUUID<T>
 where
     T: AsExpression<Integer>,
@@ -45,7 +42,6 @@ where
 }
 
 type WithUserName<T> = Eq<users::name, T>;
-
 pub fn with_user_name<T>(name: T) -> WithUserName<T>
 where
     T: AsExpression<Text>,
@@ -53,16 +49,9 @@ where
     users::name.eq(name)
 }
 
-pub fn add_user<'a>(user: &Signup<i64>, uuid: i32, conn: &DbConn) -> Result<models::User> {
-    let new_user = models::NewUser {
-        name: &user.username, 
-        email: "blank",
-        uuid: uuid,
-        password_hash: user.password,
-    };
-
+pub fn add_user<'a>(user: NewUser, conn: &DbConn) -> Result<models::User> {
     diesel::insert_into(users::table)
-        .values(&new_user)
+        .values(&user)
         .get_result(&conn.0)
         .chain_err(|| "Could not add user to DB!")
 }
@@ -78,4 +67,25 @@ pub fn get_user_with_name(name: &str, conn: &DbConn) -> Result<models::User> {
         .filter(with_user_name(name))
         .get_result(&conn.0)
         .chain_err(|| "No such user")
+}
+
+type WithTopic<T> = Eq<users::uuid, T>;
+pub fn with_user_uuid<T>(name: T) -> WithTopic<T>
+where
+    T: AsExpression<Text>,
+{
+    topics::name.eq(name)
+}
+
+pub fn add_post(post: NewPost, conn: &DbConn) -> Result<models::Post> {
+    diesel::insert_into(posts::table)
+        .values(&post)
+        .get_result(&conn.0)
+        .chain_err(|| "Could not add post to DB!")
+}
+
+pub fn get_posts(conn: &DbConn) -> Result<Vec<models::Post>> {
+    posts::table
+        .load::<models::Post>(&conn.0)
+        .chain_err(|| "Could not get posts from DB!")
 }

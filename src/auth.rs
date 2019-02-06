@@ -11,7 +11,7 @@ use rocket::outcome::{IntoOutcome};
 use rocket::http::{Cookie, Cookies};
 
 use crate::errors::*;
-use crate::database::{DbConn, self, UUID};
+use crate::database::{DbConn, self, UUID, NewUser};
 use crate::util::Signup;
 
 pub struct Randomiser {
@@ -90,7 +90,7 @@ impl AuthState {
             bail!("Username already in use!");
         }
 
-        let uuid = database::add_user(&user, self.r.random()?, &conn)?.uuid;
+        let uuid = database::add_user(NewUser::from_signup(&user, self.r.random()?), &conn)?.uuid;
         let token = self.r.random()?;
 
         match self.tokens.lock() {
