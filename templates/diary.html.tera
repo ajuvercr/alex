@@ -3,8 +3,8 @@
 
 <iframe width="0" height="0" style="display: None;" name="dummyframe" id="dummyframe"></iframe>
 
-<form class="w3-container w3-text-blue" action="/diary" method="post" targer="#dummyframe">
-
+<form class="w3-container w3-text-blue" id="form" action="/diary" method="post" targer="#dummyframe">
+{# <form id="form" class="w3-container w3-text-blue"> #}
     <p>
         <input name="title" class="w3-input" type="text" autofocus placeholder="Title">
     </p>
@@ -25,13 +25,44 @@
         </div>
     </p>
     <p>
-        <input style="margin-top: 24px;" type="submit" value="Submit" class="w3-btn w3-blue"/>
+        <input type='checkbox' name='topic_sexy' checked>
+        <input type='checkbox' name='topic_no_sexy' checked>
+        {# <input type='checkbox' name='topic[not_fancy]' checked>
+        <input type='checkbox' name='topic[hallo]' checked> #}
     </p>
-
-
+    <p>
+        <input style="margin-top: 24px;" onclick="send" value="Submit" class="w3-btn w3-blue"/>
+    </p>
 </form>
 
 <script>
+    function send() {
+        console.log("hallo");
+        const data = new FormData(form);
+        console.log(data);
+
+        const out = {};
+        out["topics"] = [];
+
+        for (e of data.entries()) {
+            if(e[0].startsWith("topic_") && e[1] ) {
+                out["topics"].push(e[0].substr(6));
+            }else{
+                out[e[0]] = e[1];
+            }
+        }
+
+        console.log(out);
+
+        var request = new XMLHttpRequest();
+        request.open('POST', '/diary');
+        request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+        request.send(JSON.stringify(out));
+    }
+
+    const form = document.getElementById("form");
+    form.addEventListener("click", send);
+
     {% if port %}
         const PORT = {{port}};
     {% else %}

@@ -8,11 +8,12 @@ pub struct Signup<T> {
     pub password: T,
 }
 
-#[derive(FromForm, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct DairyEntry {
     pub title: String,
     pub synopsis: Option<String>,
     pub content: String,
+    pub topics: Vec<String>,
 }
 
 impl<T> Signup<T> {
@@ -41,7 +42,7 @@ fn calculate_hash<T: Hash>(t: &T) -> i64 {
     }
 }
 
-#[derive(Clone, Serialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Context {
     inner: BTreeMap<String, Value>,
 }
@@ -69,6 +70,20 @@ impl Context {
     pub fn merge(self, other: Context) -> Context {
         Context {
             inner: self.inner.into_iter().chain(other.inner.into_iter()).collect()
+        }
+    }
+}
+
+use rocket::http::RawStr;
+use rocket::request::FromFormValue;
+impl<'v> FromFormValue<'v> for Context {
+    type Error = &'v RawStr;
+
+    fn from_form_value(form_value: &'v RawStr) -> Result<Self, Self::Error> {
+        println!("{:?}", form_value);
+        match form_value.parse::<usize>() {
+            Ok(age) if age >= 21 => Ok(Context::new()),
+            _ => Ok(Context::new()),
         }
     }
 }

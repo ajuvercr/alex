@@ -69,8 +69,8 @@ pub fn get_user_with_name(name: &str, conn: &DbConn) -> Result<models::User> {
         .chain_err(|| "No such user")
 }
 
-type WithTopic<T> = Eq<users::uuid, T>;
-pub fn with_user_uuid<T>(name: T) -> WithTopic<T>
+type WithTopic<T> = Eq<topics::name, T>;
+pub fn with_topic_name<T>(name: T) -> WithTopic<T>
 where
     T: AsExpression<Text>,
 {

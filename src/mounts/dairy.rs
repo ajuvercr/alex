@@ -3,6 +3,8 @@ use rocket::Rocket;
 use rocket::request::Form;
 use rocket::response::Redirect;
 
+use rocket_contrib::json::Json;
+
 use chrono::Local;
 use std::io::Write;
 use std::path::{Path};
@@ -15,8 +17,8 @@ use crate::template::Template;
 
 
 // TODO add real database
-#[post("/diary", data="<data>")]
-pub fn dairy(data: Form<DairyEntry>, user: auth::Auth) -> Result<Redirect> {
+#[post("/diary", format = "json", data="<data>")]
+pub fn dairy(data: Json<DairyEntry>, user: auth::Auth) -> Result<Redirect> {
     let data: DairyEntry = data.into_inner();
 
     let local = Local::now();
