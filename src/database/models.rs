@@ -23,25 +23,28 @@ pub struct User {
     pub password_hash: i64,
 }
 
-#[derive(Queryable, AsChangeset, Debug)]
+#[derive(Queryable, Identifiable, AsChangeset, Debug)]
 pub struct Topic {
     pub id: ID,
     pub name: String,
 }
 
-#[derive(Queryable, AsChangeset, Debug)]
+#[derive(Insertable, Queryable, AsChangeset, Debug)]
+#[table_name="post_topics"]
 pub struct PostTopic {
     pub post_id: ID,
     pub topic_id: ID,
 }
 
-#[derive(Queryable, AsChangeset, Debug)]
+#[derive(Insertable, Queryable, AsChangeset, Debug)]
+#[table_name="user_posts"]
 pub struct UserPost {
     pub user_id: ID,
     pub post_id: ID,
 }
 
-#[derive(Queryable, AsChangeset, Debug)]
+#[derive(Insertable, Queryable, AsChangeset, Debug)]
+#[table_name="user_topics"]
 pub struct UserTopic {
     user_id: ID,
     topic_id: ID,
@@ -89,6 +92,20 @@ impl<'a> NewUser<'a> {
             email: "blank",
             uuid: id,
             password_hash: user.password,
+        }
+    }
+}
+
+#[derive(Insertable, Debug)]
+#[table_name="topics"]
+pub struct NewTopic<'a> {
+    pub name: &'a str,
+}
+
+impl<'a> From<&'a str> for NewTopic<'a> {
+    fn from(name: &'a str) -> Self {
+        NewTopic {
+            name
         }
     }
 }

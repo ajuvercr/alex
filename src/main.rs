@@ -27,8 +27,10 @@ extern crate futures_fs;
 
 extern crate ws;
 
+use std::sync::{Arc, Mutex};
 use std::path::{PathBuf, Path};
 use rocket::response::{NamedFile, Redirect};
+use rand::prelude::*;
 
 mod mounts;
 // mod my_eva;
@@ -53,9 +55,7 @@ fn secure_root(_user: auth::Auth) -> Result<Redirect> {
 
 #[get("/", rank = 2)]
 fn root() -> Result<Template> {
-    let context = Context::new();
-
-    Ok(Template::render("index", &context.inner()))
+    Ok(Template::render("index", &Context::new().inner()))
 }
 
 #[get("/favicon.ico")]
@@ -81,6 +81,7 @@ fn rocket() -> rocket::Rocket {
 fn main() -> Result<()> {
     rocket()
         .manage(auth::AuthState::new()?)
+        .manage(Arc::new(Mutex::new(StdRng::seed_from_u64(rand::random::<u64>()))))
         .attach(template::TemplateFairing)
         .attach(database::DbConn::fairing())
     .launch();

@@ -3,44 +3,46 @@ use rocket::Rocket;
 use rocket::response::Redirect;
 
 use rocket_contrib::json::Json;
-
-use chrono::Local;
-use std::io::Write;
-use std::path::{Path};
-use std::fs::{File, create_dir_all};
+use rand::Rng;
 
 use crate::errors::*;
 use crate::auth;
-use crate::util::{Context, DairyEntry};
+use crate::util::{Context, DairyEntry, TopicID, Random};
 use crate::template::Template;
-use crate::database;
+use crate::database::{self, models};
+
+use diesel::prelude::*;
 
 
-// TODO add real database
 #[post("/diary", format = "json", data="<data>")]
-pub fn dairy(data: Json<DairyEntry>, user: auth::Auth) -> Result<Redirect> {
+pub fn dairy(data: Json<DairyEntry>, user: auth::Auth, conn: database::DbConn, rand: rocket::State<Random>) -> Result<Redirect> {
+    let mut rand = rand.lock().unwrap();
     let data: DairyEntry = data.into_inner();
     println!("new dairy entry {:?}", data);
 
-    let local = Local::now();
-    let date: String = local.format("%Y/%m_%b/%d").to_string();
-    let file_name = format!("{}.md", data.title);
-    let path = Path::new(&format!("./dairy/{}", user.username)).join(date).join(file_name);
+    let entry = models::NewPost::from_dairy_entry(&data, rand.gen());
+    let post = database::add_post(entry, user.uuid, &conn)?;
 
-    create_dir_all(path.parent().unwrap())?;
-    let mut f = File::create(path)?;
-    f.write_all(data.content.as_bytes())?;
+    let topics: Vec<models::Topic> = data.topics.iter().filter_map(|t| {
+        match t {
+            TopicID::New(t) => database::add_topic(models::NewTopic::from(t.as_str()), &conn).ok(),
+            TopicID::Exist(t) => database::topics()
+                .filter(database::with_topic_name(t))
+                .get_result(&conn.0).ok()
+        }
+    }).collect();
+
+    database::link_topics_to_post(&topics, &post, &conn)?;
 
     Ok(Redirect::to("/diary"))
 }
 
-use diesel::RunQueryDsl;
 #[get("/diary")]
 pub fn get(user: auth::Auth, conn: database::DbConn) -> Result<Template> {
-    let topics: Vec<String> = database::topics().load::<database::models::Topic>(&conn.0).unwrap_or(Vec::new()).iter().map(|x| x.name.clone()).collect();
+    let topics: Vec<String> = database::get_topics(&conn).unwrap_or(Vec::new()).iter().map(|x| x.name.clone()).collect();
 
     let c = Context::new()
-        .insert("username", user.username)
+        .insert("username", user.uuid)
         .insert("topics", topics);
 
     Ok(Template::render("diary", &c.inner()))

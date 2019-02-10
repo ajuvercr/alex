@@ -3,9 +3,9 @@ use crate::errors::*;
 pub mod models;
 pub mod schema;
 
-pub use models::{ID, UUID, NewPost, NewUser};
+pub use models::{ID, UUID, NewPost, NewUser, NewTopic};
 
-use schema::{users, posts, topics};
+use schema::{users, posts, topics, post_topics, user_posts};
 
 use diesel::prelude::*;
 use diesel::sql_types::*;
@@ -69,6 +69,51 @@ pub fn get_user_with_name(name: &str, conn: &DbConn) -> Result<models::User> {
         .chain_err(|| "No such user")
 }
 
+
+
+pub fn add_post(post: NewPost, owner: UUID, conn: &DbConn) -> Result<models::Post> {
+    let post: models::Post = diesel::insert_into(posts::table)
+        .values(&post)
+        .get_result(&conn.0)
+        .chain_err(|| "Could not add post to DB!")?;
+
+    let owner: models::User = users::table
+        .filter(with_user_uuid(owner))
+        .get_result(&conn.0)
+        .chain_err(|| "Couldn't get owner from DB!")?;
+
+    let link = models::UserPost {
+        user_id: owner.id,
+        post_id: post.id,
+    };
+
+    diesel::insert_into(user_posts::table)
+        .values(&link)
+        .execute(&conn.0)?;
+
+    Ok(post)
+}
+
+pub fn link_topics_to_post(topics: &Vec<models::Topic>, post: &models::Post, conn: &DbConn) -> Result<()> {
+    let ts: Vec<models::PostTopic> = topics.iter().map(|t| models::PostTopic {
+        post_id: post.id,
+        topic_id: t.id,
+    }).collect();
+
+    diesel::insert_into(post_topics::table)
+        .values(&ts)
+        .execute(&conn.0)?;
+
+    Ok(())
+}
+
+pub fn get_posts(conn: &DbConn) -> Result<Vec<models::Post>> {
+    posts::table
+        .load::<models::Post>(&conn.0)
+        .chain_err(|| "Could not get posts from DB!")
+}
+
+
 type WithTopic<T> = Eq<topics::name, T>;
 pub fn with_topic_name<T>(name: T) -> WithTopic<T>
 where
@@ -77,15 +122,16 @@ where
     topics::name.eq(name)
 }
 
-pub fn add_post(post: NewPost, conn: &DbConn) -> Result<models::Post> {
-    diesel::insert_into(posts::table)
+
+pub fn add_topic(post: NewTopic, conn: &DbConn) -> Result<models::Topic> {
+    diesel::insert_into(topics::table)
         .values(&post)
         .get_result(&conn.0)
         .chain_err(|| "Could not add post to DB!")
 }
 
-pub fn get_posts(conn: &DbConn) -> Result<Vec<models::Post>> {
-    posts::table
-        .load::<models::Post>(&conn.0)
+pub fn get_topics(conn: &DbConn) -> Result<Vec<models::Topic>> {
+    topics::table
+        .load::<models::Topic>(&conn.0)
         .chain_err(|| "Could not get posts from DB!")
 }

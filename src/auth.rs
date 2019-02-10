@@ -36,7 +36,7 @@ impl Randomiser {
 }
 
 pub struct Auth {
-    pub username: String
+    pub uuid: UUID
 }
 
 impl<'a, 'r> FromRequest<'a, 'r> for Auth {
@@ -58,9 +58,9 @@ impl<'a, 'r> FromRequest<'a, 'r> for Auth {
             };
 
         combo.and_then(|(uuid, token)|
-                db.validate_token(uuid, token).ok().map(|is_ok| (uuid.to_string(), is_ok))
+                db.validate_token(uuid, token).ok().map(|is_ok| (uuid, is_ok))
             )
-            .and_then(|(username, is_ok)| if is_ok { Some(Auth{username}) } else { None })
+            .and_then(|(uuid, is_ok)| if is_ok { Some(Auth{uuid}) } else { None })
             .or_forward(())
     }
 }
@@ -82,12 +82,12 @@ impl AuthState {
         )
     }
 
-    pub fn add_user(&self, user: Signup<i64>, cookies: &mut Cookies, conn: &DbConn) -> Result<()> {
+    pub fn add_user(&self, user: Signup<i64>, cookies: &mut Cookies, conn: &DbConn, rand: &mut StdRng) -> Result<()> {
         if database::get_user_with_name(&user.username, conn).is_ok() {
             bail!("Username already in use!");
         }
 
-        let uuid = database::add_user(NewUser::from_signup(&user, self.r.random()?), &conn)?.uuid;
+        let uuid = database::add_user(NewUser::from_signup(&user, rand.gen()), &conn)?.uuid;
         let token = self.r.random()?;
 
         match self.tokens.lock() {
@@ -103,13 +103,13 @@ impl AuthState {
         Ok(())
     }
 
-    pub fn auth_user(&self, user: Signup<i64>, cookies: &mut Cookies, conn: &DbConn) -> Result<()> {
+    pub fn auth_user(&self, user: Signup<i64>, cookies: &mut Cookies, conn: &DbConn, rand: &mut StdRng) -> Result<()> {
         let user_db = database::get_user_with_name(&user.username, &conn)?;
         if user_db.password_hash != user.password {
             bail!("Incorrect Password");
         }
 
-        let token = self.r.random()?;
+        let token = rand.gen();
 
         match self.tokens.lock() {
             Ok(mut state) => {

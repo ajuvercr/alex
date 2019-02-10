@@ -18,7 +18,7 @@ use crate::errors::*;
 
 #[post("/upload/<path..>", data = "<data>")]
 pub fn post(data: Vec<u8>, path: PathBuf, user: auth::Auth) -> Result<String> {
-    let mut path = Path::new(&format!("./upload/{}", user.username)).join(path);
+    let mut path = Path::new(&format!("./upload/{}", user.uuid)).join(path);
     let pf = path.clone();
     
     create_dir_all(path.parent().unwrap())?;
@@ -87,7 +87,7 @@ pub fn get_context(user: auth::Auth, file: PathBuf) -> Result<Context> {
 
         let path_comps: Vec<String> = vec![String::from("upload")].iter().cloned().chain(file.iter().filter_map(|x| x.to_str()).map(|x| x.to_string())).collect();
 
-        let path = Path::new(&format!("upload/{}", user.username)).join(file);
+        let path = Path::new(&format!("upload/{}", user.uuid)).join(file);
 
         if !path.exists() {
             println!("making dir {:?}", path);
@@ -103,7 +103,7 @@ pub fn get_context(user: auth::Auth, file: PathBuf) -> Result<Context> {
         let c = Context::new()
             .insert("files", files)
             .insert("dirs", dirs)
-            .insert("username", user.username)
+            .insert("username", user.uuid)
             .insert("path", path_comps)
             .insert("parent_base", "/");
 
@@ -115,7 +115,7 @@ pub fn get_context(user: auth::Auth, file: PathBuf) -> Result<Context> {
 #[get("/upload/<file..>")]
 fn get<'r>(user: auth::Auth, file: PathBuf) -> Result<FileWrapper<'r>> {
 
-    let path = Path::new(&format!("upload/{}", user.username)).join(file.clone());
+    let path = Path::new(&format!("upload/{}", user.uuid)).join(file.clone());
     if path.is_file() {
         let body = NamedFile::open(path).chain_err(|| "Could not open path")?;
         Ok(FileWrapper::Response(Response::build()

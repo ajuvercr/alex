@@ -2,6 +2,11 @@ use serde::Serialize;
 use std::collections::BTreeMap;
 use serde_json::Value;
 
+use std::sync::{Arc, Mutex};
+use rand::rngs::StdRng;
+
+pub type Random = Arc<Mutex<StdRng>>;
+
 #[derive(FromForm, Debug, Clone)]
 pub struct Signup<T> {
     pub username: String,

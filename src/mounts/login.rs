@@ -5,7 +5,7 @@ use rocket::response::Redirect;
 
 use crate::errors::*;
 use crate::auth;
-use crate::util::{Context, Signup};
+use crate::util::{Context, Signup, Random};
 use crate::database::{DbConn, self};
 
 #[get("/logout")]
@@ -23,12 +23,14 @@ fn signup_red() -> Redirect {
 }
 
 #[post("/signup", data="<signup>")]
-fn signup(mut cookies: Cookies, signup: Form<Signup<String>>, auth: State<auth::AuthState>, conn: DbConn) -> Result<Redirect> {
+fn signup(mut cookies: Cookies, signup: Form<Signup<String>>, auth: State<auth::AuthState>, conn: DbConn, rand: State<Random>) -> Result<Redirect> {
+    let mut rand = rand.lock().unwrap();
     let signup: Signup<String> = signup.into_inner();
+
     
     // let u = database::add_user(&signup.username, &signup.password, 0, &conn);
     // println!("{:?}", u);
-    auth.add_user(signup.hashed(), &mut cookies, &conn).chain_err(|| ErrorKind::TemplateError(Context::new(), "index", "Cannot add user to database"))?;
+    auth.add_user(signup.hashed(), &mut cookies, &conn, &mut rand).chain_err(|| ErrorKind::TemplateError(Context::new(), "index", "Cannot add user to database"))?;
 
     Ok(Redirect::to("/"))
 }
@@ -39,7 +41,8 @@ fn login_red() -> Redirect {
 }
 
 #[post("/login", data="<signup>")]
-fn login(mut cookies: Cookies, signup: Form<Signup<String>>, auth: State<auth::AuthState>, conn: DbConn) -> Result<Redirect> {
+fn login(mut cookies: Cookies, signup: Form<Signup<String>>, auth: State<auth::AuthState>, conn: DbConn, rand: State<Random>) -> Result<Redirect> {
+    let mut rand = rand.lock().unwrap();
     let signup: Signup<String> = signup.into_inner();
 
     println!("{:?}", database::get_users(&conn));
@@ -49,7 +52,7 @@ fn login(mut cookies: Cookies, signup: Form<Signup<String>>, auth: State<auth::A
     //         .load::<(models::Topic, models::Post, models::User)>(&conn.0)
     //         .expect("couldn't load users")
     // );
-    auth.auth_user(signup.hashed(), &mut cookies, &conn).chain_err(|| ErrorKind::TemplateError(Context::new(), "index", "Incorrect login combination"))?;
+    auth.auth_user(signup.hashed(), &mut cookies, &conn, &mut rand).chain_err(|| ErrorKind::TemplateError(Context::new(), "index", "Incorrect login combination"))?;
 
     Ok(Redirect::to("/"))
 }
