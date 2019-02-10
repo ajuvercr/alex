@@ -47,18 +47,15 @@ impl<'a, 'r> FromRequest<'a, 'r> for Auth {
         let mut cookies = request.cookies();
 
         let token = cookies.get_private("token").and_then(|t| {
-            println!("{:?}", t);
             t.value().parse().ok()
         });
         let uuid = cookies.get("uuid").and_then(|u| u.value().parse().ok());
 
-        println!("{:?} {:?}", token, uuid);
-        let combo = 
-        if let (Some(token), Some(uuid)) = (token, uuid) {
+        let combo = if let (Some(token), Some(uuid)) = (token, uuid) {
                 Some((uuid, token))
-        } else {
-            None
-        };
+            } else {
+                None
+            };
 
         combo.and_then(|(uuid, token)|
                 db.validate_token(uuid, token).ok().map(|is_ok| (uuid.to_string(), is_ok))

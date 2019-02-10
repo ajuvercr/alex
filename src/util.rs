@@ -9,11 +9,18 @@ pub struct Signup<T> {
 }
 
 #[derive(Deserialize, Debug, Clone)]
+#[serde(tag = "type", content = "0")]
+pub enum TopicID {
+    New(String),
+    Exist(String),
+}
+
+#[derive(Deserialize, Debug, Clone)]
 pub struct DairyEntry {
     pub title: String,
     pub synopsis: Option<String>,
     pub content: String,
-    pub topics: Vec<String>,
+    pub topics: Vec<TopicID>,
 }
 
 impl<T> Signup<T> {

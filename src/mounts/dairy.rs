@@ -1,6 +1,5 @@
 
 use rocket::Rocket;
-use rocket::request::Form;
 use rocket::response::Redirect;
 
 use rocket_contrib::json::Json;
@@ -14,12 +13,14 @@ use crate::errors::*;
 use crate::auth;
 use crate::util::{Context, DairyEntry};
 use crate::template::Template;
+use crate::database;
 
 
 // TODO add real database
 #[post("/diary", format = "json", data="<data>")]
 pub fn dairy(data: Json<DairyEntry>, user: auth::Auth) -> Result<Redirect> {
     let data: DairyEntry = data.into_inner();
+    println!("new dairy entry {:?}", data);
 
     let local = Local::now();
     let date: String = local.format("%Y/%m_%b/%d").to_string();
@@ -33,9 +34,15 @@ pub fn dairy(data: Json<DairyEntry>, user: auth::Auth) -> Result<Redirect> {
     Ok(Redirect::to("/diary"))
 }
 
+use diesel::RunQueryDsl;
 #[get("/diary")]
-pub fn get(user: auth::Auth) -> Result<Template> {
-    let c = Context::new().insert("username", user.username);
+pub fn get(user: auth::Auth, conn: database::DbConn) -> Result<Template> {
+    let topics: Vec<String> = database::topics().load::<database::models::Topic>(&conn.0).unwrap_or(Vec::new()).iter().map(|x| x.name.clone()).collect();
+
+    let c = Context::new()
+        .insert("username", user.username)
+        .insert("topics", topics);
+
     Ok(Template::render("diary", &c.inner()))
 }
 

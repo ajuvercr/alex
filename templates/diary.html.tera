@@ -24,29 +24,53 @@
             </div>
         </div>
     </p>
-    <p>
-        <input type='checkbox' name='topic_sexy' checked>
-        <input type='checkbox' name='topic_no_sexy' checked>
-        {# <input type='checkbox' name='topic[not_fancy]' checked>
-        <input type='checkbox' name='topic[hallo]' checked> #}
+
+    <p id="topics_div" style="width=100%">
+    {% for topic in topics %}
+        <div class="w3-third">
+            <input class="w3-check" type="checkbox" id="topic_{{ topic }}" name="topic_{{ topic }}"/>
+
+            <label for="topic_{{ topic }}">{{topic}}</label>
+        </div>
+    {% endfor %}
     </p>
+
+    <div style="width:100%">
+        <div class="w3-third"><input class="w3-input" placeholder="new" type="text" id="new_topic"></div> 
+        <button class="w3-btn w3-blue" id="new_topic_btn">Add</button>
+    </div>
+
     <p>
-        <input style="margin-top: 24px;" onclick="send" value="Submit" class="w3-btn w3-blue"/>
+        <input id="submit" style="margin-top: 24px;" onclick="send" value="Submit" class="w3-btn w3-blue"/>
     </p>
 </form>
 
 <script>
     function send() {
         console.log("hallo");
-        const data = new FormData(form);
-        console.log(data);
+        const form_data = new FormData(form);
+        console.log(form_data);
 
         const out = {};
         out["topics"] = [];
 
-        for (e of data.entries()) {
+        for (e of form_data.entries()) {
+            console.log(e);
+            // TODO check if checkbox is checked
+
             if(e[0].startsWith("topic_") && e[1] ) {
-                out["topics"].push(e[0].substr(6));
+                const t = e[0].substr(6);
+                if(t.startsWith("new_")) {
+                    out.topics.push({
+                        type: "New",
+                        0: t.substr(4)
+                    });
+                } else {
+                    out["topics"].push({
+                        type: "Exist",
+                        0: t
+                    });
+                }
             }else{
                 out[e[0]] = e[1];
             }
@@ -60,8 +84,29 @@
         request.send(JSON.stringify(out));
     }
 
-    const form = document.getElementById("form");
-    form.addEventListener("click", send);
+    const submit = document.getElementById("submit");
+    submit.addEventListener("click", send);
+
+    function new_topic(event) {
+        event.preventDefault();
+
+        const name = new_topic_name.value;
+        new_topic_name.value = '';
+
+        topics_div.innerHTML += `
+            <div class="w3-third">
+            <input class="w3-check" type="checkbox" id="topic_new_${name}" name="topic_new_${name}" checked/>
+
+            <label for="topic_new_${name}">${name}</label></div>
+        `;
+    }
+
+    const add_topic = document.getElementById("new_topic_btn");
+    add_topic.addEventListener("click", new_topic);
+
+    const new_topic_name = document.getElementById("new_topic");
+
+    const topics_div = document.getElementById("topics_div");
 
     {% if port %}
         const PORT = {{port}};

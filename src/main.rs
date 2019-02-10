@@ -28,7 +28,7 @@ extern crate futures_fs;
 extern crate ws;
 
 use std::path::{PathBuf, Path};
-use rocket::response::NamedFile;
+use rocket::response::{NamedFile, Redirect};
 
 mod mounts;
 // mod my_eva;
@@ -47,10 +47,8 @@ use self::template::Template;
 pub mod errors;
 
 #[get("/")]
-fn secure_root(user: auth::Auth) -> Result<Template> {
-    let context = Context::new().insert("username", user.username.clone());
-
-    Ok(Template::render("diary", &context.inner()))
+fn secure_root(_user: auth::Auth) -> Result<Redirect> {
+    Ok(Redirect::to("/diary"))
 }
 
 #[get("/", rank = 2)]
