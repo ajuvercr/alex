@@ -18,16 +18,33 @@ pub struct Post {
 pub struct User {
     pub id: ID,
     pub uuid: UUID,
-    pub email: String,
     pub name: String,
+    pub email: String,
     pub password_hash: i64,
 }
 
 #[derive(Queryable, AsChangeset, Debug)]
 pub struct Topic {
-    pub post_id: ID,
-    pub user_id: ID,
+    pub id: ID,
     pub name: String,
+}
+
+#[derive(Queryable, AsChangeset, Debug)]
+pub struct PostTopic {
+    pub post_id: ID,
+    pub topic_id: ID,
+}
+
+#[derive(Queryable, AsChangeset, Debug)]
+pub struct UserPost {
+    pub user_id: ID,
+    pub post_id: ID,
+}
+
+#[derive(Queryable, AsChangeset, Debug)]
+pub struct UserTopic {
+    user_id: ID,
+    topic_id: ID,
 }
 
 #[derive(Insertable, Debug)]
@@ -75,6 +92,3 @@ impl<'a> NewUser<'a> {
         }
     }
 }
-
-joinable!(topics -> users (user_id));
-joinable!(topics -> posts (post_id));

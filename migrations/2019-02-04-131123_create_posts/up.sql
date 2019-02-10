@@ -1,7 +1,0 @@
-CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
-  uuid INT NOT NULL,
-  email VARCHAR NOT NULL,
-  name VARCHAR NOT NULL,
-  password_hash BIGINT NOT NULL
-);
