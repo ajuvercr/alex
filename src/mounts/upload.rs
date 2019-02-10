@@ -103,7 +103,7 @@ pub fn get_context(user: auth::Auth, file: PathBuf) -> Result<Context> {
         let c = Context::new()
             .insert("files", files)
             .insert("dirs", dirs)
-            .insert("username", user.uuid)
+            .insert("username", user.username)
             .insert("path", path_comps)
             .insert("parent_base", "/");
 

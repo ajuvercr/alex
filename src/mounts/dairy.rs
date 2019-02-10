@@ -42,7 +42,7 @@ pub fn get(user: auth::Auth, conn: database::DbConn) -> Result<Template> {
     let topics: Vec<String> = database::get_topics(&conn).unwrap_or(Vec::new()).iter().map(|x| x.name.clone()).collect();
 
     let c = Context::new()
-        .insert("username", user.uuid)
+        .insert("username", user.username)
         .insert("topics", topics);
 
     Ok(Template::render("diary", &c.inner()))

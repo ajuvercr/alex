@@ -27,12 +27,6 @@ pub fn topics() -> topics::table {
     topics::table
 }
 
-// pub fn joined<'a>() -> SelectStatement<impl QuerySource> {
-//     topics::table
-//         .inner_join(posts::table).inner_join(users::table)
-// }
-
-
 type WithUserUUID<T> = Eq<users::uuid, T>;
 pub fn with_user_uuid<T>(uuid: T) -> WithUserUUID<T>
 where

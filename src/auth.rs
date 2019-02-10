@@ -4,7 +4,6 @@ use std::time::{Duration, Instant};
 
 use rand::prelude::*;
 use rand::rngs::StdRng;
-use rand::SeedableRng;
 
 use rocket::request::{self, Request, FromRequest, State};
 use rocket::outcome::{IntoOutcome};
@@ -14,29 +13,9 @@ use crate::errors::*;
 use crate::database::{DbConn, self, UUID, NewUser};
 use crate::util::Signup;
 
-pub struct Randomiser {
-    r: Arc<Mutex<StdRng>>,
-}
-
-impl Randomiser {
-    fn new() -> Randomiser {
-        Randomiser {
-            r: Arc::new(Mutex::new(StdRng::seed_from_u64(rand::random::<u64>()))),
-        }
-    }
-
-    fn random<T>(& self) -> Result<T>
-        where rand::distributions::Standard: rand::distributions::Distribution<T> {
-        if let Ok(mut ss) = self.r.lock() {
-            Ok(ss.gen())
-        } else {
-            bail!("Could not lock state")
-        }
-    }
-}
-
 pub struct Auth {
-    pub uuid: UUID
+    pub uuid: UUID,
+    pub username: String,
 }
 
 impl<'a, 'r> FromRequest<'a, 'r> for Auth {
@@ -49,18 +28,20 @@ impl<'a, 'r> FromRequest<'a, 'r> for Auth {
         let token = cookies.get_private("token").and_then(|t| {
             t.value().parse().ok()
         });
-        let uuid = cookies.get("uuid").and_then(|u| u.value().parse().ok());
+        let uuid: Option<UUID> = cookies.get("uuid").and_then(|u| u.value().parse().ok());
+
 
         let combo = if let (Some(token), Some(uuid)) = (token, uuid) {
-                Some((uuid, token))
+                let username = cookies.get("username").map(|u| u.value().to_string()).unwrap_or(uuid.to_string());
+                Some((uuid, token, username))
             } else {
                 None
             };
 
-        combo.and_then(|(uuid, token)|
-                db.validate_token(uuid, token).ok().map(|is_ok| (uuid, is_ok))
+        combo.and_then(|(uuid, token, username)|
+                db.validate_token(uuid, token).ok().map(|is_ok| (uuid, username, is_ok))
             )
-            .and_then(|(uuid, is_ok)| if is_ok { Some(Auth{uuid}) } else { None })
+            .and_then(|(uuid, username, is_ok)| if is_ok { Some(Auth{uuid, username}) } else { None })
             .or_forward(())
     }
 }
@@ -69,7 +50,6 @@ pub type Token = u32;
 
 pub struct AuthState {
     tokens: Arc<Mutex<HashMap<UUID, (Instant, Token)>>>,
-    r: Randomiser,
 }
 
 impl AuthState {
@@ -77,7 +57,6 @@ impl AuthState {
         Ok(
             AuthState {
                 tokens: Arc::new(Mutex::new(HashMap::new())),
-                r: Randomiser::new(),
             }
         )
     }
@@ -88,7 +67,7 @@ impl AuthState {
         }
 
         let uuid = database::add_user(NewUser::from_signup(&user, rand.gen()), &conn)?.uuid;
-        let token = self.r.random()?;
+        let token = rand.gen();
 
         match self.tokens.lock() {
             Ok(mut state) => {
@@ -99,6 +78,8 @@ impl AuthState {
 
         cookies.add_private(Cookie::new("token", token.to_string()));
         cookies.add(Cookie::new("uuid", uuid.to_string()));
+        cookies.add(Cookie::new("username", user.username));
+
 
         Ok(())
     }
@@ -120,6 +101,7 @@ impl AuthState {
         
         cookies.add_private(Cookie::new("token", token.to_string()));
         cookies.add(Cookie::new("uuid", user_db.uuid.to_string()));
+        cookies.add(Cookie::new("username", user.username));
 
         Ok(())
     }
