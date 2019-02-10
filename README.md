@@ -10,7 +10,7 @@ Ok ok, one more problem. When you run Alex on your local NAS, you also want your
 
 ### Goal
 
-[ ] Create posts with a tag  
+[X] Create posts with a tag  
 [ ] View all posts with a tag  
 [ ] Be able to use uploaded pictures in a post  
   
