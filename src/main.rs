@@ -27,6 +27,8 @@ extern crate futures_fs;
 
 extern crate ws;
 
+extern crate bcrypt;
+
 use std::sync::{Arc, Mutex};
 use std::path::{PathBuf, Path};
 use rocket::response::{NamedFile, Redirect};

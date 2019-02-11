@@ -23,7 +23,7 @@ CREATE TABLE users (
   uuid INT NOT NULL,
   name VARCHAR NOT NULL,
   email VARCHAR NOT NULL,
-  password_hash BIGINT NOT NULL
+  password_hash VARCHAR NOT NULL
 );
 
 CREATE TABLE user_topics (

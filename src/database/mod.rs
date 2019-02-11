@@ -44,6 +44,7 @@ where
 }
 
 pub fn add_user<'a>(user: NewUser, conn: &DbConn) -> Result<models::User> {
+    println!("adding user {:?}", user);
     diesel::insert_into(users::table)
         .values(&user)
         .get_result(&conn.0)

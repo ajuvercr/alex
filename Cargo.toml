@@ -26,6 +26,8 @@ tera = "0.11.20"
 
 ws = "0.7.9"
 
+bcrypt = "0.3.0"
+
 diesel = { version = "1.0.0", features = ["postgres", "chrono"] }
 
 [dependencies.rocket_contrib]

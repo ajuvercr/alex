@@ -10,16 +10,14 @@ Ok ok, one more problem. When you run Alex on your local NAS, you also want your
 
 ### Goal
 
+[X] Authenticate users  
+  
 [X] Create posts with a tag  
 [ ] View all posts with a tag  
 [ ] Be able to use uploaded pictures in a post  
   
 [ ] Upload files to Alex  
 [ ] Download files that are meant for you  
-
-### Done
-
-[X] Authenticate users
 
 ### Personal hurdles
 

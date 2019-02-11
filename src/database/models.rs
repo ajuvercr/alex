@@ -20,7 +20,7 @@ pub struct User {
     pub uuid: UUID,
     pub name: String,
     pub email: String,
-    pub password_hash: i64,
+    pub password_hash: String,
 }
 
 #[derive(Queryable, Identifiable, AsChangeset, Debug)]
@@ -81,17 +81,18 @@ impl<'a> NewPost<'a> {
 pub struct NewUser<'a> {
     pub name: &'a str,
     pub email: &'a str,
-    pub password_hash: i64,
+    pub password_hash: String,
     pub uuid: UUID,
 }
 
 impl<'a> NewUser<'a> {
-    pub fn from_signup(user: &'a Signup<i64>, id: UUID) -> Self {
+    pub fn from_signup(user: &'a Signup, password: String, id: UUID) -> Self {
+
         NewUser {
-            name: &user.username, 
+            name: &user.username,
             email: "blank",
             uuid: id,
-            password_hash: user.password,
+            password_hash: password,
         }
     }
 }
