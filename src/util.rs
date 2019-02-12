@@ -35,17 +35,6 @@ impl Signup {
 }
 
 
-use std::hash::{Hash, Hasher};
-
-fn calculate_hash<T: Hash>(t: &T) -> i64 {
-    use std::collections::hash_map::DefaultHasher;
-    let mut s = DefaultHasher::new();
-    t.hash(&mut s);
-    unsafe {
-        std::mem::transmute::<u64, i64>(s.finish())
-    }
-}
-
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Context {
     inner: BTreeMap<String, Value>,

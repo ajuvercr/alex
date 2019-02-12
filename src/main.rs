@@ -52,7 +52,7 @@ pub mod errors;
 
 #[get("/")]
 fn secure_root(_user: auth::Auth) -> Result<Redirect> {
-    Ok(Redirect::to("/diary"))
+    Ok(Redirect::to("/diaries"))
 }
 
 #[get("/", rank = 2)]

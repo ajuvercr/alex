@@ -60,7 +60,7 @@ impl Fairing for TemplateFairing {
         }
     }
 
-    fn on_attach(&self, rocket: Rocket) -> Result<Rocket, Rocket> {
+    fn on_attach(&self, rocket: Rocket) -> std::result::Result<Rocket, Rocket> {
         match Tera::new("templates/**/*") {
             Ok(t) => Ok(rocket.manage(t)),
             Err(e) => {
@@ -71,4 +71,17 @@ impl Fairing for TemplateFairing {
     }
 }
 
+
+use tera::*;
+fn make_url_for(urls: BTreeMap<String, String>) -> GlobalFn {
+    Box::new(move |args| -> tera::Result<Value> {
+        match args.get("name") {
+            Some(val) => match from_value::<String>(val.clone()) {
+                Ok(v) =>  Ok(to_value(urls.get(&v).unwrap()).unwrap()),
+                Err(_) => Err("oops".into()),
+            },
+            None => Err("oops".into()),
+        }
+    })
+}
 

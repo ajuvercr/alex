@@ -28,8 +28,6 @@ fn signup(mut cookies: Cookies, signup: Form<Signup>, auth: State<auth::AuthStat
     let signup: Signup = signup.into_inner();
 
     
-    // let u = database::add_user(&signup.username, &signup.password, 0, &conn);
-    // println!("{:?}", u);
     auth.add_user(signup, &mut cookies, &conn, &mut rand).chain_err(|| ErrorKind::TemplateError(Context::new(), "index", "Cannot add user to database"))?;
 
     Ok(Redirect::to("/"))
@@ -45,13 +43,6 @@ fn login(mut cookies: Cookies, signup: Form<Signup>, auth: State<auth::AuthState
     let mut rand = rand.lock().unwrap();
     let signup: Signup = signup.into_inner();
 
-    println!("{:?}", database::get_users(&conn));
-    // println!("{:?}",
-    //     database::joined()
-    //         .filter(database::with_user_UUID(10))
-    //         .load::<(models::Topic, models::Post, models::User)>(&conn.0)
-    //         .expect("couldn't load users")
-    // );
     auth.auth_user(signup, &mut cookies, &conn, &mut rand).chain_err(|| ErrorKind::TemplateError(Context::new(), "index", "Incorrect login combination"))?;
 
     Ok(Redirect::to("/"))

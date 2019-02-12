@@ -15,7 +15,7 @@ use diesel::prelude::*;
 
 
 #[post("/diary", format = "json", data="<data>")]
-pub fn dairy(data: Json<DairyEntry>, user: auth::Auth, conn: database::DbConn, rand: rocket::State<Random>) -> Result<Redirect> {
+fn dairy(data: Json<DairyEntry>, user: auth::Auth, conn: database::DbConn, rand: rocket::State<Random>) -> Result<Redirect> {
     let mut rand = rand.lock().unwrap();
     let data: DairyEntry = data.into_inner();
     println!("new dairy entry {:?}", data);
@@ -38,7 +38,7 @@ pub fn dairy(data: Json<DairyEntry>, user: auth::Auth, conn: database::DbConn, r
 }
 
 #[get("/diary")]
-pub fn get(user: auth::Auth, conn: database::DbConn) -> Result<Template> {
+fn get(user: auth::Auth, conn: database::DbConn) -> Result<Template> {
     let topics: Vec<String> = database::get_topics(&conn).unwrap_or(Vec::new()).iter().map(|x| x.name.clone()).collect();
 
     let c = Context::new()
@@ -46,6 +46,19 @@ pub fn get(user: auth::Auth, conn: database::DbConn) -> Result<Template> {
         .insert("topics", topics);
 
     Ok(Template::render("diary", &c.inner()))
+}
+
+#[get("/diaries")]
+fn list(user: auth::Auth, conn: database::DbConn) -> Result<Template> {
+    let topics: Vec<String> = database::get_topics(&conn).unwrap_or(Vec::new()).iter().map(|x| x.name.clone()).collect();
+
+    let posts: Option<Vec<models::PostWithTopics>> = database::get_posts(&conn).ok();
+    let c = Context::new()
+        .insert("username", user.username)
+        .insert("topics", topics)
+        .insert("posts", posts);
+
+    Ok(Template::render("diaryList", &c.inner()))
 }
 
 pub fn fuel(r: Rocket) -> Rocket {
@@ -74,5 +87,5 @@ pub fn fuel(r: Rocket) -> Rocket {
         }).unwrap();
     });
 
-    r.mount("/", routes![get, dairy])
+    r.mount("/", routes![get, dairy, list])
 }

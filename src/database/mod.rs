@@ -10,6 +10,7 @@ use schema::{users, posts, topics, post_topics, user_posts};
 use diesel::prelude::*;
 use diesel::sql_types::*;
 use diesel::dsl::{Eq};
+
 use diesel::expression::AsExpression;
 
 #[database("sqlite_logs")]
@@ -44,7 +45,6 @@ where
 }
 
 pub fn add_user<'a>(user: NewUser, conn: &DbConn) -> Result<models::User> {
-    println!("adding user {:?}", user);
     diesel::insert_into(users::table)
         .values(&user)
         .get_result(&conn.0)
@@ -102,12 +102,27 @@ pub fn link_topics_to_post(topics: &Vec<models::Topic>, post: &models::Post, con
     Ok(())
 }
 
-pub fn get_posts(conn: &DbConn) -> Result<Vec<models::Post>> {
-    posts::table
-        .load::<models::Post>(&conn.0)
-        .chain_err(|| "Could not get posts from DB!")
-}
+use std::collections::HashMap;
 
+pub fn get_posts(conn: &DbConn) -> Result<Vec<models::PostWithTopics>> {
+    let posts = post_topics::table.inner_join(posts::table).inner_join(topics::table)
+        .load::<(models::PostTopic, models::Post, models::Topic)>(&conn.0)
+        .chain_err(|| "Couldn't get posts from DB!")?;
+
+    let mut postmap: HashMap<UUID, models::PostWithTopics> = HashMap::new();
+    
+    posts.iter().for_each(|(_, post, topic)| {
+        if let Some(p) = postmap.get_mut(&post.uuid) {
+            p.add_topic(topic);
+        } else {
+            let mut pwt = models::PostWithTopics::new(post);
+            pwt.add_topic(topic);
+            postmap.insert(post.uuid, pwt);
+        }
+    });
+
+    Ok(postmap.values().cloned().collect())
+}
 
 type WithTopic<T> = Eq<topics::name, T>;
 pub fn with_topic_name<T>(name: T) -> WithTopic<T>

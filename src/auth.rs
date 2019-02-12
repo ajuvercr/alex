@@ -68,7 +68,7 @@ impl AuthState {
             bail!("Username already in use!");
         }
 
-        let pw = hash(user.password.clone(), bcrypt::DEFAULT_COST).chain_err(|| "Couldn't hash password")?;
+        let pw = hash(user.password.clone(), 8).chain_err(|| "Couldn't hash password")?;
         let uuid = database::add_user(NewUser::from_signup(&user, pw, rand.gen()), &conn)?.uuid;
         let token = rand.gen();
 
@@ -89,8 +89,6 @@ impl AuthState {
 
     pub fn auth_user(&self, user: Signup, cookies: &mut Cookies, conn: &DbConn, rand: &mut StdRng) -> Result<()> {
         let user_db = database::get_user_with_name(&user.username, &conn)?;
-        println!("pw hash from db: {}", user_db.password_hash);
-        println!("pw hash from user pw: {}", hash(user.password.clone(), bcrypt::DEFAULT_COST).chain_err(|| "bla")?);
         if !verify(&user.password, &user_db.password_hash).chain_err(|| "Couldn't verify hash")? {
             bail!("Incorrect Password");
         }
