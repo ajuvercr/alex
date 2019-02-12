@@ -36,7 +36,7 @@ table! {
         uuid -> Int4,
         name -> Varchar,
         email -> Varchar,
-        password_hash -> Int8,
+        password_hash -> Varchar,
     }
 }
 

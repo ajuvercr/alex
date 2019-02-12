@@ -27,6 +27,8 @@ extern crate futures_fs;
 
 extern crate ws;
 
+extern crate bcrypt;
+
 use std::sync::{Arc, Mutex};
 use std::path::{PathBuf, Path};
 use rocket::response::{NamedFile, Redirect};
@@ -50,7 +52,7 @@ pub mod errors;
 
 #[get("/")]
 fn secure_root(_user: auth::Auth) -> Result<Redirect> {
-    Ok(Redirect::to("/diary"))
+    Ok(Redirect::to("/diaries"))
 }
 
 #[get("/", rank = 2)]

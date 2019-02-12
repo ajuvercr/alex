@@ -95,3 +95,16 @@ i {
 .fw {
     width: 100%;
 }
+
+.sized_post {
+    height: 150px;
+    margin-bottom: 14px;
+}
+
+.hover_click {
+    cursor: pointer;
+}
+
+.hover_click:hover {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.5), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}

@@ -8,9 +8,9 @@ use rand::rngs::StdRng;
 pub type Random = Arc<Mutex<StdRng>>;
 
 #[derive(FromForm, Debug, Clone)]
-pub struct Signup<T> {
+pub struct Signup {
     pub username: String,
-    pub password: T,
+    pub password: String,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -28,31 +28,12 @@ pub struct DairyEntry {
     pub topics: Vec<TopicID>,
 }
 
-impl<T> Signup<T> {
+impl Signup {
     pub fn username(&self) -> String {
         self.username.clone()
     }
 }
 
-impl Signup<String> {
-    pub fn hashed(&self) -> Signup<i64> {
-        Signup {
-            username: self.username(),
-            password: calculate_hash(&self.password),
-        }
-    }
-}
-
-use std::hash::{Hash, Hasher};
-
-fn calculate_hash<T: Hash>(t: &T) -> i64 {
-    use std::collections::hash_map::DefaultHasher;
-    let mut s = DefaultHasher::new();
-    t.hash(&mut s);
-    unsafe {
-        std::mem::transmute::<u64, i64>(s.finish())
-    }
-}
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Context {

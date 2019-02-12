@@ -9,6 +9,8 @@ use rocket::request::{self, Request, FromRequest, State};
 use rocket::outcome::{IntoOutcome};
 use rocket::http::{Cookie, Cookies};
 
+use bcrypt::{hash, verify};
+
 use crate::errors::*;
 use crate::database::{DbConn, self, UUID, NewUser};
 use crate::util::Signup;
@@ -61,12 +63,13 @@ impl AuthState {
         )
     }
 
-    pub fn add_user(&self, user: Signup<i64>, cookies: &mut Cookies, conn: &DbConn, rand: &mut StdRng) -> Result<()> {
+    pub fn add_user(&self, user: Signup, cookies: &mut Cookies, conn: &DbConn, rand: &mut StdRng) -> Result<()> {
         if database::get_user_with_name(&user.username, conn).is_ok() {
             bail!("Username already in use!");
         }
 
-        let uuid = database::add_user(NewUser::from_signup(&user, rand.gen()), &conn)?.uuid;
+        let pw = hash(user.password.clone(), 8).chain_err(|| "Couldn't hash password")?;
+        let uuid = database::add_user(NewUser::from_signup(&user, pw, rand.gen()), &conn)?.uuid;
         let token = rand.gen();
 
         match self.tokens.lock() {
@@ -84,9 +87,9 @@ impl AuthState {
         Ok(())
     }
 
-    pub fn auth_user(&self, user: Signup<i64>, cookies: &mut Cookies, conn: &DbConn, rand: &mut StdRng) -> Result<()> {
+    pub fn auth_user(&self, user: Signup, cookies: &mut Cookies, conn: &DbConn, rand: &mut StdRng) -> Result<()> {
         let user_db = database::get_user_with_name(&user.username, &conn)?;
-        if user_db.password_hash != user.password {
+        if !verify(&user.password, &user_db.password_hash).chain_err(|| "Couldn't verify hash")? {
             bail!("Incorrect Password");
         }
 
