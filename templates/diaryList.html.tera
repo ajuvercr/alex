@@ -13,7 +13,7 @@
     <div class="w3-rest w3-row-padding w3-section w3-stretch">
             {% if posts %}
                 {% for post in posts %}
-                    <div class="w3-col s4 post" data-topics="{{ post.topics | join(sep=' ') }}">
+                    <div class="w3-col s4 post" data-topics="{{ post.topics | join(sep='$$$') }}">
                         <div class="w3-card-4 sized_post hover_click">
                             <header class="w3-container w3-blue">
                                 <h1>{{post.title}}</h1>
@@ -68,7 +68,7 @@ function update_view() {
     const ts = topics.filter(x => x.checked).map(x => x.name.substr(6));
     console.log(ts);
     for (let p of posts) {
-        if (one_in_other(p.dataset.topics.split(" "), ts)) {
+        if (one_in_other(p.dataset.topics.split("$$$"), ts)) {
             show(p);
         } else {
             hide(p);
