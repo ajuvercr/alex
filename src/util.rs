@@ -80,3 +80,18 @@ impl<'v> FromFormValue<'v> for Context {
         }
     }
 }
+
+use crate::errors::{self, ResultExt};
+use std::process::{Command, Stdio};
+use std::io::{Write};
+pub fn from_markdown(s: String) -> errors::Result<String> {
+    let mut child = Command::new("/usr/bin/pandoc")
+                            .stdin(Stdio::piped())
+                            .stdout(Stdio::piped())
+                            .spawn()
+                            .chain_err(|| "Failed to spawn process")?;
+
+    child.stdin.as_mut().unwrap().write_all(s.as_bytes()).chain_err(|| "Could not write to child")?;
+    child.wait_with_output().chain_err(|| "Child didn't finish well")
+        .and_then(|s| String::from_utf8(s.stdout).chain_err(|| "Couldn't convert to String"))
+}

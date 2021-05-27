@@ -7,6 +7,9 @@ use std::io::Cursor;
 
 use std::collections::BTreeMap;
 use serde_json::Value;
+
+use crate::util::from_markdown;
+
 type Context = BTreeMap<String, Value>;
 
 pub struct Template {
@@ -62,7 +65,11 @@ impl Fairing for TemplateFairing {
 
     fn on_attach(&self, rocket: Rocket) -> std::result::Result<Rocket, Rocket> {
         match Tera::new("templates/**/*") {
-            Ok(t) => Ok(rocket.manage(t)),
+            Ok(mut t) => {
+                t.register_filter("empty", empty);
+                t.register_filter("from_markdown", markdown_it);
+                Ok(rocket.manage(t))
+            },
             Err(e) => {
                 println!("{:?}", e);
                 Err(rocket)
@@ -71,6 +78,19 @@ impl Fairing for TemplateFairing {
     }
 }
 
+use std::collections::HashMap;
+fn empty(value: Value, _: HashMap<String, Value>) -> tera::Result<Value> {
+    let value: String = tera::from_value(value)?;
+    println!("EMPTYING YOUR FUCKING STRING {:?}", value);
+    to_value("").map_err(|_| "oops".into())
+}
+
+fn markdown_it(value: Value, _: HashMap<String, Value>) -> tera::Result<Value> {
+    let value: String = tera::from_value(value)?;
+    from_markdown(value)
+        .map(|s| to_value(s).unwrap())
+        .map_err(|_| "Markdown fail".into())
+}
 
 use tera::*;
 fn make_url_for(urls: BTreeMap<String, String>) -> GlobalFn {

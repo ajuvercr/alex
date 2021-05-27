@@ -13,7 +13,7 @@ use diesel::dsl::{Eq};
 
 use diesel::expression::AsExpression;
 
-#[database("sqlite_logs")]
+#[database("database")]
 pub struct DbConn(diesel::PgConnection);
 
 pub fn users() -> users::table {

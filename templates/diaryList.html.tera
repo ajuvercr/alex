@@ -16,7 +16,7 @@
                     <div class="w3-col s4 post" data-topics="{{ post.topics | join(sep='$$$') }}">
                         <div class="w3-card-4 sized_post hover_click">
                             <header class="w3-container w3-blue">
-                                <h1>{{post.title}}</h1>
+                                <h1>{{post.title | empty }}</h1>
                             </header>
 
                             <div class="w3-container w3-center">

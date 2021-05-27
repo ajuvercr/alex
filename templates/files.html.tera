@@ -64,7 +64,7 @@
     function redirect() {
         if (input.value) {
             console.log("/upload"+base+"/"+input.value);
-           // location.href = "/upload"+base+"/"+input.value;
+            location.href = "/upload"+base+"/"+input.value;
         }
     }
 

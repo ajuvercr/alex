@@ -1,2 +1,2 @@
 [global.databases]
-sqlite_logs = { url = "postgres://postgres:blablabla@localhost/alex_db" }
+database = { url = "postgres://user:user@localhost/alex_db" }

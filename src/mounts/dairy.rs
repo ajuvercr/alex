@@ -63,23 +63,19 @@ fn list(user: auth::Auth, conn: database::DbConn) -> Result<Template> {
 
 pub fn fuel(r: Rocket) -> Rocket {
     use std::thread;
-    use std::process::{Command, Stdio};
-    use std::io::{Write};
+    use crate::util::from_markdown;
 
     thread::spawn(move || {
         ws::listen("127.0.0.1:3012", |out| {
             println!("token {:?}", out.token());
             move |msg| {
                 if let ws::Message::Text(s) = msg {
-                    let mut child = Command::new("/usr/bin/pandoc")
-                            .stdin(Stdio::piped())
-                            .stdout(Stdio::piped())
-                            .spawn()                      
-                            .ok().expect("failed to spawn process");
-
-                    child.stdin.as_mut().unwrap().write_all(s.as_bytes()).expect("Could not write to child");
-                    let output = child.wait_with_output().unwrap();
-                    out.send(String::from_utf8(output.stdout).unwrap())
+                    if let Ok(s) = from_markdown(s) {
+                        out.send(s)
+                    } else {
+                        println!("failed to encode to html");
+                        Ok(())
+                    }
                 } else {
                     out.send("please send text")
                 }
